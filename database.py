@@ -109,6 +109,19 @@ class BaseDatosLocal:
                 conexion.close()
         return None
 
+    def _comprobar_password(self, contrasena_plana, pass_bd):
+        """Compara una contraseña escrita contra texto plano o hash bcrypt."""
+        pass_bd = pass_bd or ""
+        if pass_bd.startswith("$2"):
+            try:
+                return bcrypt.checkpw(
+                    contrasena_plana.encode("utf-8"),
+                    pass_bd.encode("utf-8")
+                )
+            except ValueError:
+                return False
+        return contrasena_plana == pass_bd
+
     def verificar_login(self, usuario, contrasena_plana):
         """Valida usuario y contraseña (soporta texto plano de prueba o hash bcrypt)."""
         query = """
@@ -122,23 +135,67 @@ class BaseDatosLocal:
 
         if resultado:
             fila = resultado[0]
-            pass_bd = fila["password"] or ""
-            correcta = False
-
-            if pass_bd.startswith("$2"):
-                try:
-                    correcta = bcrypt.checkpw(
-                        contrasena_plana.encode("utf-8"),
-                        pass_bd.encode("utf-8")
-                    )
-                except ValueError:
-                    correcta = False
-            else:
-                correcta = (contrasena_plana == pass_bd)
-
-            if correcta:
+            if self._comprobar_password(contrasena_plana, fila["password"]):
                 return True, fila
         return False, None
+
+    def obtener_info_admin(self, identificador):
+        """Obtiene id_adm, nombre_adm y nombre_usuario_adm del administrador activo."""
+        if not identificador:
+            return None
+        query = """
+            SELECT id_adm, nombre_adm, nombre_usuario_adm
+            FROM administrador
+            WHERE activo_adm = 1 AND (nombre_adm = %s OR nombre_usuario_adm = %s)
+            LIMIT 1
+        """
+        resultado = self.consultar(query, (identificador, identificador))
+        return resultado[0] if resultado else None
+
+    def cambiar_contrasena_admin(self, identificador, contrasena_actual, contrasena_nueva):
+        """Verifica la contraseña actual y guarda la nueva encriptada con bcrypt."""
+        conexion = self.conectar()
+        if not conexion:
+            return False, "No se pudo conectar a la base de datos."
+
+        cursor = conexion.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """
+                SELECT id_adm, password
+                FROM administrador
+                WHERE activo_adm = 1 AND (nombre_adm = %s OR nombre_usuario_adm = %s)
+                LIMIT 1
+                """,
+                (identificador, identificador)
+            )
+            admin = cursor.fetchone()
+            if not admin:
+                return False, "No se encontró el usuario administrador en la base de datos."
+
+            if not self._comprobar_password(contrasena_actual, admin["password"]):
+                return False, "La contraseña actual es incorrecta."
+
+            if contrasena_actual == contrasena_nueva:
+                return False, "La nueva contraseña debe ser diferente a la actual."
+
+            nuevo_hash = bcrypt.hashpw(
+                contrasena_nueva.encode("utf-8"),
+                bcrypt.gensalt()
+            ).decode("utf-8")
+
+            cursor.execute(
+                "UPDATE administrador SET password = %s WHERE id_adm = %s",
+                (nuevo_hash, admin["id_adm"])
+            )
+            conexion.commit()
+            return True, "La contraseña se actualizó correctamente."
+        except Error as e:
+            conexion.rollback()
+            return False, f"Error al actualizar la contraseña en MySQL: {e}"
+        finally:
+            cursor.close()
+            conexion.close()
 
     def obtener_precio_vigente(self):
         """Devuelve el precio vigente por litro de gas (fecha_fin NULL) o None."""

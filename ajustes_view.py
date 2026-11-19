@@ -3,10 +3,186 @@ import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
 
+class ModalCambiarContrasena(ctk.CTkToplevel):
+    """Ventana emergente para actualizar la contraseña del administrador."""
+
+    def __init__(self, parent, db, identificador_admin, texto_cuenta):
+        super().__init__(parent)
+        self.db = db
+        self.identificador_admin = identificador_admin
+
+        self.title("Seguridad de usuario - Alfa Gas")
+        self.geometry("430x475")
+        self.resizable(False, False)
+        self.configure(fg_color="#F4F6F7")
+        self.transient(parent.winfo_toplevel())
+
+        # Encabezado verde institucional
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=62)
+        header.pack(fill="x", side="top")
+        header.pack_propagate(False)
+        ctk.CTkLabel(
+            header,
+            text="🔒  Cambiar contraseña",
+            font=("Arial", 18, "bold"),
+            text_color="#FFFFFF"
+        ).pack(side="left", padx=24)
+
+        # Contenedor blanco principal
+        card = ctk.CTkFrame(
+            self,
+            fg_color="#FFFFFF",
+            corner_radius=12,
+            border_width=1,
+            border_color="#D5DBDB"
+        )
+        card.pack(fill="both", expand=True, padx=20, pady=18)
+
+        ctk.CTkLabel(
+            card,
+            text=f"Cuenta: {texto_cuenta}",
+            font=("Arial", 13, "bold"),
+            text_color="#214328"
+        ).pack(anchor="w", padx=22, pady=(16, 8))
+
+        self.entry_actual = self._crear_campo_password(card, "Contraseña actual")
+        self.entry_nueva = self._crear_campo_password(card, "Nueva contraseña (mínimo 5 caracteres)")
+        self.entry_confirmar = self._crear_campo_password(card, "Confirmar nueva contraseña")
+        self.entry_confirmar.bind("<Return>", lambda _: self.guardar())
+
+        self.lbl_error = ctk.CTkLabel(
+            card,
+            text="",
+            font=("Arial", 12, "bold"),
+            text_color="#C0392B",
+            wraplength=340,
+            justify="center"
+        )
+        self.lbl_error.pack(pady=(10, 4), padx=20)
+
+        # Botones inferiores
+        fila_botones = ctk.CTkFrame(card, fg_color="transparent")
+        fila_botones.pack(fill="x", side="bottom", padx=22, pady=(6, 18))
+        fila_botones.grid_columnconfigure((0, 1), weight=1)
+
+        ctk.CTkButton(
+            fila_botones,
+            text="Cancelar",
+            height=38,
+            fg_color="#FFFFFF",
+            text_color="#2C3E50",
+            border_width=1,
+            border_color="#BDC3C7",
+            hover_color="#E9ECEF",
+            font=("Arial", 13, "bold"),
+            corner_radius=8,
+            command=self.destroy
+        ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
+
+        ctk.CTkButton(
+            fila_botones,
+            text="Guardar contraseña",
+            height=38,
+            fg_color="#214328",
+            text_color="#FFFFFF",
+            hover_color="#18321E",
+            font=("Arial", 13, "bold"),
+            corner_radius=8,
+            command=self.guardar
+        ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
+
+        self.after(60, self._centrar_y_enfocar)
+
+    def _crear_campo_password(self, parent, etiqueta):
+        """Crea un campo de contraseña con botón de ojito para mostrar/ocultar."""
+        ctk.CTkLabel(
+            parent,
+            text=etiqueta,
+            font=("Arial", 13, "bold"),
+            text_color="#2C3E50"
+        ).pack(anchor="w", padx=22, pady=(8, 3))
+
+        fila = ctk.CTkFrame(parent, fg_color="transparent")
+        fila.pack(fill="x", padx=22)
+
+        entry = ctk.CTkEntry(
+            fila,
+            height=36,
+            corner_radius=8,
+            border_color="#BDC3C7",
+            show="•"
+        )
+        entry.pack(side="left", fill="x", expand=True, padx=(0, 6))
+
+        btn_ojo = ctk.CTkButton(
+            fila,
+            text="👁️",
+            width=38,
+            height=36,
+            corner_radius=8,
+            fg_color="#E9ECEF",
+            text_color="#2C3E50",
+            hover_color="#D5DBDB"
+        )
+        btn_ojo.configure(command=lambda e=entry, b=btn_ojo: self._alternar_visibilidad(e, b))
+        btn_ojo.pack(side="right")
+
+        return entry
+
+    def _alternar_visibilidad(self, entry, boton):
+        """Muestra u oculta el texto escrito en el campo de contraseña."""
+        if entry.cget("show") == "•":
+            entry.configure(show="")
+            boton.configure(fg_color="#D5E8D4")
+        else:
+            entry.configure(show="•")
+            boton.configure(fg_color="#E9ECEF")
+
+    def _centrar_y_enfocar(self):
+        """Centra la ventana respecto a la pantalla principal y activa el foco modal."""
+        self.update_idletasks()
+        master = self.master.winfo_toplevel()
+        x = master.winfo_rootx() + (master.winfo_width() - self.winfo_width()) // 2
+        y = master.winfo_rooty() + (master.winfo_height() - self.winfo_height()) // 2
+        self.geometry(f"+{max(x, 0)}+{max(y, 0)}")
+        self.grab_set()
+        self.entry_actual.focus_set()
+
+    def guardar(self):
+        """Valida los tres campos y actualiza la contraseña en MySQL."""
+        actual = self.entry_actual.get()
+        nueva = self.entry_nueva.get()
+        confirmar = self.entry_confirmar.get()
+
+        if not actual or not nueva or not confirmar:
+            self.lbl_error.configure(text="Completa los tres campos antes de guardar.")
+            return
+
+        if len(nueva) < 5:
+            self.lbl_error.configure(text="La nueva contraseña debe tener al menos 5 caracteres.")
+            return
+
+        if nueva != confirmar:
+            self.lbl_error.configure(text="La nueva contraseña y su confirmación no coinciden.")
+            return
+
+        exito, mensaje = self.db.cambiar_contrasena_admin(
+            self.identificador_admin,
+            actual,
+            nueva
+        )
+        if exito:
+            self.destroy()
+            messagebox.showinfo("Contraseña actualizada", mensaje)
+        else:
+            self.lbl_error.configure(text=mensaje)
+
+
 class AjustesView(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="transparent")
         self.controller = controller
+        self._modal_pass = None
 
         # Barra superior verde
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
@@ -93,10 +269,11 @@ class AjustesView(ctk.CTkFrame):
 
         self.lbl_usuario_seg = ctk.CTkLabel(
             card_seg,
-            text="Usuario: admin\n\nContraseña: [**********] 👁️",
+            text="Usuario: admin\n\nContraseña: [**********]",
             font=("Arial", 14),
             text_color="#2C3E50",
-            justify="center"
+            justify="center",
+            wraplength=220
         )
         self.lbl_usuario_seg.pack(pady=35)
 
@@ -109,7 +286,8 @@ class AjustesView(ctk.CTkFrame):
             border_color="#214328",
             hover_color="#E9ECEF",
             font=("Arial", 14, "bold"),
-            corner_radius=0
+            corner_radius=0,
+            command=self.abrir_modal_contrasena
         ).pack(side="bottom", pady=20, padx=20, fill="x")
 
         # --------------------------------------------------------------
@@ -170,12 +348,42 @@ class AjustesView(ctk.CTkFrame):
         texto_precio = f"${float(precio):.2f}" if precio is not None else "$00.00"
         self.lbl_precio_actual.configure(text=f"Precio actual por litro de gas\n{texto_precio}")
 
-        usuario = self.controller.admin_actual or "admin"
-        self.lbl_usuario_seg.configure(text=f"Usuario: {usuario}\n\nContraseña: [**********] 👁️")
+        info_admin = self.controller.db.obtener_info_admin(self.controller.admin_actual)
+        if info_admin:
+            usuario_mostrar = info_admin["nombre_usuario_adm"]
+        else:
+            usuario_mostrar = self.controller.admin_actual or "admin"
+
+        self.lbl_usuario_seg.configure(
+            text=f"Usuario: {usuario_mostrar}\n\nContraseña: ••••••••••"
+        )
 
         fecha_respaldo = self.controller.db.obtener_fecha_ultimo_respaldo()
         self.lbl_ultimo_respaldo.configure(
             text=f"Último respaldo:\n{fecha_respaldo}" if fecha_respaldo else "Último respaldo: 00/00/0000"
+        )
+
+    def abrir_modal_contrasena(self):
+        """Abre la ventana emergente para cambiar la contraseña del administrador."""
+        if not self.controller.admin_actual:
+            messagebox.showwarning("Sesión no detectada", "Inicia sesión nuevamente para cambiar tu contraseña.")
+            return
+
+        if self._modal_pass is not None and self._modal_pass.winfo_exists():
+            self._modal_pass.focus()
+            return
+
+        info_admin = self.controller.db.obtener_info_admin(self.controller.admin_actual)
+        if info_admin:
+            texto_cuenta = f"{info_admin['nombre_adm']} ({info_admin['nombre_usuario_adm']})"
+        else:
+            texto_cuenta = self.controller.admin_actual
+
+        self._modal_pass = ModalCambiarContrasena(
+            self,
+            db=self.controller.db,
+            identificador_admin=self.controller.admin_actual,
+            texto_cuenta=texto_cuenta
         )
 
     def guardar_nuevo_precio(self):
