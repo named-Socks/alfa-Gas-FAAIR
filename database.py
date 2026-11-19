@@ -217,7 +217,7 @@ class BaseDatosLocal:
         return None
 
     def generar_respaldo(self, ruta_destino):
-        """Genera un respaldo .sql completo en la ruta elegida por el usuario."""
+        """Genera un respaldo .sql completo (tablas, datos y triggers) en la ruta elegida."""
         mysqldump = self._buscar_mysqldump()
         if not mysqldump:
             return False, "No se encontró 'mysqldump' ni 'mariadb-dump' en la computadora."
@@ -226,7 +226,6 @@ class BaseDatosLocal:
             mysqldump,
             f"-h{self.host}",
             f"-u{self.user}",
-            "--routines",
             "--triggers",
             "--single-transaction",
             self.database,
@@ -245,6 +244,8 @@ class BaseDatosLocal:
                 )
 
             if resultado.returncode != 0:
+                if os.path.exists(ruta_destino):
+                    os.remove(ruta_destino)
                 return False, f"Error de MySQL al respaldar:\n{resultado.stderr}"
 
             fecha_str = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -253,6 +254,8 @@ class BaseDatosLocal:
 
             return True, ruta_destino
         except Exception as e:
+            if os.path.exists(ruta_destino):
+                os.remove(ruta_destino)
             return False, f"Error inesperado al crear el respaldo: {e}"
 
     def obtener_fecha_ultimo_respaldo(self):
