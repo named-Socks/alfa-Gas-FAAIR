@@ -61,27 +61,26 @@ class _CalendarioPopup(ctk.CTkToplevel):
         self.transient(parent.winfo_toplevel())
         self.bind("<Escape>", lambda _: self.destroy())
 
-        # Encabezado verde con navegación de mes
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=48)
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=42)
         header.pack(fill="x")
         header.pack_propagate(False)
 
         ctk.CTkButton(
             header,
             text="◀",
-            width=36,
-            height=32,
+            width=32,
+            height=28,
             fg_color="transparent",
             hover_color="#18321E",
             text_color="#FFFFFF",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 13, "bold"),
             command=self._mes_anterior
         ).pack(side="left", padx=6)
 
         self.lbl_mes_anio = ctk.CTkLabel(
             header,
             text="",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 13, "bold"),
             text_color="#FFFFFF"
         )
         self.lbl_mes_anio.pack(side="left", expand=True)
@@ -89,16 +88,15 @@ class _CalendarioPopup(ctk.CTkToplevel):
         ctk.CTkButton(
             header,
             text="▶",
-            width=36,
-            height=32,
+            width=32,
+            height=28,
             fg_color="transparent",
             hover_color="#18321E",
             text_color="#FFFFFF",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 13, "bold"),
             command=self._mes_siguiente
         ).pack(side="right", padx=6)
 
-        # Cabecera de días de la semana
         dias_header = ctk.CTkFrame(self, fg_color="#F4F6F7", corner_radius=0)
         dias_header.pack(fill="x", padx=8, pady=(8, 2))
         for i, dia_txt in enumerate(self.DIAS_SEMANA):
@@ -106,29 +104,27 @@ class _CalendarioPopup(ctk.CTkToplevel):
             ctk.CTkLabel(
                 dias_header,
                 text=dia_txt,
-                font=("Arial", 13, "bold"),
+                font=("Arial", 11, "bold"),
                 text_color="#566573"
-            ).grid(row=0, column=i, pady=4)
+            ).grid(row=0, column=i, pady=3)
 
-        # Cuadrícula de días del mes
         self.grid_dias = ctk.CTkFrame(self, fg_color="transparent")
         self.grid_dias.pack(fill="both", expand=True, padx=8, pady=4)
         for i in range(7):
             self.grid_dias.grid_columnconfigure(i, weight=1, uniform="celdas")
 
-        # Barra inferior rápida (Hoy / Limpiar)
         footer = ctk.CTkFrame(self, fg_color="transparent")
-        footer.pack(fill="x", padx=10, pady=(4, 10))
+        footer.pack(fill="x", padx=10, pady=(2, 10))
         footer.grid_columnconfigure((0, 1), weight=1)
 
         ctk.CTkButton(
             footer,
             text="Hoy",
-            height=32,
+            height=28,
             fg_color="#E8F5E9",
             text_color="#214328",
             hover_color="#D5E8D4",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 12, "bold"),
             corner_radius=6,
             command=lambda: self._elegir(date.today())
         ).grid(row=0, column=0, padx=(0, 4), sticky="ew")
@@ -136,13 +132,13 @@ class _CalendarioPopup(ctk.CTkToplevel):
         ctk.CTkButton(
             footer,
             text="Limpiar",
-            height=32,
+            height=28,
             fg_color="#F8F9FA",
             text_color="#566573",
             border_width=1,
             border_color="#D5DBDB",
             hover_color="#E9ECEF",
-            font=("Arial", 13),
+            font=("Arial", 12),
             corner_radius=6,
             command=lambda: self._elegir(None)
         ).grid(row=0, column=1, padx=(4, 0), sticky="ew")
@@ -151,10 +147,9 @@ class _CalendarioPopup(ctk.CTkToplevel):
         self.after(40, lambda: self._posicionar(parent))
 
     def _posicionar(self, widget_origen):
-        """Coloca el calendario justo debajo del botón sin salirse de la pantalla."""
         self.update_idletasks()
-        ancho = 310
-        alto = 325
+        ancho = 272
+        alto = 282
         x = widget_origen.winfo_rootx()
         y = widget_origen.winfo_rooty() + widget_origen.winfo_height() + 4
 
@@ -196,7 +191,7 @@ class _CalendarioPopup(ctk.CTkToplevel):
         for fila_idx, semana in enumerate(semanas):
             for col_idx, dia in enumerate(semana):
                 if dia == 0:
-                    ctk.CTkLabel(self.grid_dias, text="", height=32).grid(row=fila_idx, column=col_idx, padx=1, pady=1)
+                    ctk.CTkLabel(self.grid_dias, text="", height=28).grid(row=fila_idx, column=col_idx, padx=1, pady=1)
                     continue
 
                 fecha_celda = date(self.anio, self.mes, dia)
@@ -208,25 +203,25 @@ class _CalendarioPopup(ctk.CTkToplevel):
                     txt_color = "#FFFFFF"
                     hover = "#18321E"
                     borde = 0
-                    fuente = ("Arial", 13, "bold")
+                    fuente = ("Arial", 11, "bold")
                 elif es_hoy:
                     fg = "#E8F5E9"
                     txt_color = "#214328"
                     hover = "#D5E8D4"
                     borde = 1
-                    fuente = ("Arial", 13, "bold")
+                    fuente = ("Arial", 11, "bold")
                 else:
                     fg = "transparent"
                     txt_color = "#2C3E50"
                     hover = "#E9ECEF"
                     borde = 0
-                    fuente = ("Arial", 13)
+                    fuente = ("Arial", 11)
 
                 ctk.CTkButton(
                     self.grid_dias,
                     text=str(dia),
-                    width=36,
-                    height=32,
+                    width=32,
+                    height=28,
                     corner_radius=6,
                     fg_color=fg,
                     text_color=txt_color,
@@ -245,7 +240,7 @@ class _CalendarioPopup(ctk.CTkToplevel):
 class SelectorFecha(ctk.CTkFrame):
     """Campo clicable que abre un calendario desplegable y permite limpiar la fecha."""
 
-    def __init__(self, parent, placeholder="Elegir fecha", width=180, on_change=None):
+    def __init__(self, parent, placeholder="Elegir fecha", width=150, on_change=None):
         super().__init__(
             parent,
             fg_color="#F8F9FA",
@@ -253,7 +248,7 @@ class SelectorFecha(ctk.CTkFrame):
             border_width=1,
             border_color="#BDC3C7",
             width=width,
-            height=38
+            height=34
         )
         self.pack_propagate(False)
         self.placeholder = placeholder
@@ -267,22 +262,22 @@ class SelectorFecha(ctk.CTkFrame):
             fg_color="transparent",
             text_color="#566573",
             hover_color="#E9ECEF",
-            font=("Arial", 14),
+            font=("Arial", 12),
             anchor="w",
             command=self._abrir_calendario
         )
-        self.btn_fecha.pack(side="left", fill="both", expand=True, padx=(4, 0))
+        self.btn_fecha.pack(side="left", fill="both", expand=True, padx=(3, 0))
 
         self.btn_limpiar = ctk.CTkButton(
             self,
             text="✕",
-            width=26,
-            height=26,
+            width=22,
+            height=22,
             corner_radius=6,
             fg_color="transparent",
             text_color="#7F8C8D",
             hover_color="#FADBD8",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 11, "bold"),
             command=self.limpiar
         )
 
@@ -298,14 +293,14 @@ class SelectorFecha(ctk.CTkFrame):
             self.btn_fecha.configure(
                 text=f"📅 {nueva_fecha.strftime('%d/%m/%Y')}",
                 text_color="#214328",
-                font=("Arial", 14, "bold")
+                font=("Arial", 12, "bold")
             )
-            self.btn_limpiar.pack(side="right", padx=(0, 4))
+            self.btn_limpiar.pack(side="right", padx=(0, 3))
         else:
             self.btn_fecha.configure(
                 text=f"📅 {self.placeholder}",
                 text_color="#566573",
-                font=("Arial", 14)
+                font=("Arial", 12)
             )
             self.btn_limpiar.pack_forget()
 
@@ -316,12 +311,11 @@ class SelectorFecha(ctk.CTkFrame):
         self.set_fecha(None)
 
     def get(self):
-        """Devuelve la fecha en formato 'dd/mm/aaaa' o '' si está vacía."""
         return self._fecha.strftime("%d/%m/%Y") if self._fecha else ""
 
 
 # ----------------------------------------------------------------------
-# Clase principal de conexión y operaciones con MySQL
+# Clase principal de conexión y operaciones con MySQL (faair_alfa_gas)
 # ----------------------------------------------------------------------
 class BaseDatosLocal:
     def __init__(self):
@@ -407,11 +401,14 @@ class BaseDatosLocal:
         return contrasena_plana == pass_bd
 
     def verificar_login(self, usuario, contrasena_plana):
-        """Valida usuario y contraseña (soporta texto plano o hash bcrypt)."""
+        """Valida usuario y contraseña del administrador activo."""
         query = """
-            SELECT id_adm, id_adm AS id_administrador,
-                   nombre_adm, nombre_adm AS nombre_completo,
-                   nombre_usuario_adm, id_sucursal, password
+            SELECT id_adm,
+                   nombre_adm,
+                   nombre_adm AS nombre_completo,
+                   nombre_usuario_adm,
+                   id_sucursal,
+                   password
             FROM administrador
             WHERE nombre_usuario_adm = %s AND activo_adm = 1
         """
@@ -482,22 +479,23 @@ class BaseDatosLocal:
             conexion.close()
 
     def obtener_precio_vigente(self):
-        """Devuelve el precio vigente de Gas LP Estacionario (temporada primero, luego base)."""
+        """Devuelve el precio vigente por litro de Gas LP Estacionario."""
         query = """
             SELECT pp.precio_producto
             FROM precio_producto pp
             JOIN producto pr ON pr.id_producto = pp.id_producto
             WHERE pr.tipo_producto = 'GAS_ESTACIONARIO'
+              AND pr.activo_producto = 1
               AND pp.fecha_inicio <= CURDATE()
               AND (pp.fecha_fin IS NULL OR pp.fecha_fin >= CURDATE())
-            ORDER BY (pp.tipo_precio = 'TEMPORADA') DESC, pp.fecha_inicio DESC, pp.id_precio DESC
+            ORDER BY pp.fecha_inicio DESC, pp.id_precio DESC
             LIMIT 1
         """
         resultado = self.consultar(query)
         return resultado[0]["precio_producto"] if resultado else None
 
     def actualizar_precio_gas(self, nuevo_precio, nombre_admin=None):
-        """Actualiza el precio BASE vigente de Gas LP Estacionario respetando uq_precio_periodo."""
+        """Cierra el precio anterior e inserta (o actualiza si es hoy) el nuevo precio vigente."""
         conexion = self.conectar()
         if not conexion:
             return False, "No se pudo conectar a la base de datos."
@@ -525,17 +523,18 @@ class BaseDatosLocal:
             cursor.execute(
                 """
                 SELECT id_precio FROM precio_producto
-                WHERE id_producto = %s AND tipo_precio = 'BASE' AND fecha_inicio = CURDATE()
-                LIMIT 1
+                WHERE id_producto = %s AND fecha_inicio = CURDATE() AND fecha_fin IS NULL
+                ORDER BY id_precio DESC LIMIT 1
                 """,
                 (id_producto,)
             )
             hoy_row = cursor.fetchone()
+
             if hoy_row:
                 cursor.execute(
                     """
                     UPDATE precio_producto
-                    SET precio_producto = %s, fecha_fin = NULL, id_adm = %s
+                    SET precio_producto = %s, id_adm = %s
                     WHERE id_precio = %s
                     """,
                     (nuevo_precio, id_adm, hoy_row["id_precio"])
@@ -545,14 +544,14 @@ class BaseDatosLocal:
                     """
                     UPDATE precio_producto
                     SET fecha_fin = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-                    WHERE id_producto = %s AND tipo_precio = 'BASE' AND fecha_fin IS NULL
+                    WHERE id_producto = %s AND fecha_fin IS NULL
                     """,
                     (id_producto,)
                 )
                 cursor.execute(
                     """
-                    INSERT INTO precio_producto (id_producto, tipo_precio, nombre_temporada, precio_producto, fecha_inicio, fecha_fin, id_adm)
-                    VALUES (%s, 'BASE', NULL, %s, CURDATE(), NULL, %s)
+                    INSERT INTO precio_producto (id_producto, precio_producto, fecha_inicio, fecha_fin, id_adm)
+                    VALUES (%s, %s, CURDATE(), NULL, %s)
                     """,
                     (id_producto, nuevo_precio, id_adm)
                 )
@@ -567,7 +566,7 @@ class BaseDatosLocal:
             conexion.close()
 
     def _buscar_mysqldump(self):
-        """Busca mysqldump o mariadb-dump en Linux o XAMPP."""
+        """Busca mysqldump o mariadb-dump en el sistema o XAMPP."""
         for herramienta in ("mysqldump", "mariadb-dump"):
             ruta = shutil.which(herramienta)
             if ruta:

@@ -1,22 +1,23 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-from database import formatear_fecha, armar_direccion
+from database import armar_direccion
 
 
 class PedidosView(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="transparent")
         self.controller = controller
+        self.pedidos_map = {}
 
-        # Barra superior
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
+        # Navbar
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
             header,
             text="🔥 ALFA GAS      Pedidos",
-            font=("Arial", 28, "bold"),
+            font=("Arial", 24, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=35, pady=22)
+        ).pack(side="left", padx=30, pady=20)
 
         ctk.CTkButton(
             header,
@@ -24,235 +25,197 @@ class PedidosView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 16, "bold"),
-            height=42,
+            font=("Arial", 14, "bold"),
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=35)
+        ).pack(side="right", padx=30)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=12)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=10)
 
         self.lbl_precio = ctk.CTkLabel(
             self,
-            text="Precio vigente por litro: $00.00",
-            font=("Arial", 16, "bold"),
-            text_color="#214328"
+            text="Precio por litro: $00.00",
+            font=("Arial", 14, "bold"),
+            text_color="#7F8C8D"
         )
-        self.lbl_precio.pack(pady=(12, 0))
+        self.lbl_precio.place(relx=0.5, rely=0.07, anchor="center")
 
-        # Contenedor blanco principal
+        # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=15)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=(30, 20))
 
-        # Barra superior de búsqueda y acciones
         top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=20, pady=(18, 8))
+        top_bar.pack(fill="x", padx=20, pady=(15, 5))
 
-        ctk.CTkLabel(top_bar, text="Filtros:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(top_bar, text="Filtros rápidos:", font=("Arial", 14, "bold"), text_color="#7F8C8D").pack(side="left")
 
-        self.var_estado = ctk.StringVar(value="Todos")
-        ctk.CTkOptionMenu(
+        self.combo_estado = ctk.CTkOptionMenu(
             top_bar,
-            variable=self.var_estado,
-            values=["Todos", "REGISTRADO", "ENTREGADO", "CANCELADO", "FALLIDO"],
+            values=["Todos los estados", "REGISTRADO", "ENTREGADO", "CANCELADO", "FALLIDO"],
             width=165,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
-            fg_color="#F8F9FA",
+            fg_color="#FFFFFF",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
-        ).pack(side="left", padx=(0, 12))
+        )
+        self.combo_estado.pack(side="left", padx=10)
 
-        self.var_origen = ctk.StringVar(value="Todos los orígenes")
-        ctk.CTkOptionMenu(
+        self.combo_origen = ctk.CTkOptionMenu(
             top_bar,
-            variable=self.var_origen,
             values=["Todos los orígenes", "WHATSAPP", "ADMIN"],
-            width=195,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
-            fg_color="#F8F9FA",
+            width=165,
+            fg_color="#FFFFFF",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
-        ).pack(side="left", padx=(0, 12))
+        )
+        self.combo_origen.pack(side="left", padx=10)
 
-        self.entry_buscar = ctk.CTkEntry(
+        self.entry_busqueda = ctk.CTkEntry(
             top_bar,
-            placeholder_text="🔍 Buscar por folio o cliente...",
-            width=290,
-            height=38,
-            font=("Arial", 14),
+            placeholder_text="🔍 Buscar por cliente o folio",
+            width=260,
             corner_radius=20
         )
-        self.entry_buscar.pack(side="right")
-        self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
+        self.entry_busqueda.pack(side="right")
+        self.entry_busqueda.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
         # Barra de cambio de estatus
-        accion_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        accion_bar.pack(fill="x", padx=20, pady=(6, 8))
+        accion_bar = ctk.CTkFrame(main_frame, fg_color="#F8F9FA", corner_radius=10)
+        accion_bar.pack(fill="x", padx=20, pady=10)
 
         ctk.CTkLabel(
             accion_bar,
-            text="Cambiar estatus del pedido seleccionado a:",
-            font=("Arial", 15, "bold"),
+            text="Selecciona un pedido y cambia su estatus:",
+            font=("Arial", 13, "bold"),
             text_color="#2C3E50"
-        ).pack(side="left", padx=(0, 10))
+        ).pack(side="left", padx=15, pady=10)
 
-        self.var_nuevo_estatus = ctk.StringVar(value="ENTREGADO")
-        ctk.CTkOptionMenu(
+        self.combo_nuevo_estado = ctk.CTkOptionMenu(
             accion_bar,
-            variable=self.var_nuevo_estatus,
-            values=["REGISTRADO", "ENTREGADO", "CANCELADO", "FALLIDO"],
-            width=165,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
-            fg_color="#F8F9FA",
+            values=["ENTREGADO", "REGISTRADO", "CANCELADO", "FALLIDO"],
+            width=150,
+            fg_color="#FFFFFF",
             text_color="#2C3E50",
             button_color="#D5DBDB"
-        ).pack(side="left", padx=(0, 12))
+        )
+        self.combo_nuevo_estado.pack(side="left", padx=10)
 
         ctk.CTkButton(
             accion_bar,
-            text="Actualizar estatus",
+            text="Actualizar estatus ✔",
             fg_color="#214328",
             hover_color="#18321E",
-            text_color="#FFFFFF",
-            font=("Arial", 15, "bold"),
-            height=38,
-            corner_radius=8,
+            font=("Arial", 13, "bold"),
             command=self.cambiar_estatus_pedido
-        ).pack(side="left")
+        ).pack(side="left", padx=10)
 
-        # Contenedor de tabla con barras de desplazamiento
-        tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
+        # Tabla
+        columnas = ("folio", "fecha", "cliente", "dir", "litros", "monto", "origen", "estatus")
+        self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
+        encabezados = ["Folio", "Fecha / Hora", "Cliente", "Dirección de entrega", "Cantidad", "Monto total", "Origen", "Estatus"]
+        anchos = [95, 145, 190, 290, 110, 115, 105, 115]
 
-        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical")
-        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal")
-
-        columnas = ("folio", "fecha", "cliente", "direccion", "cantidad", "monto", "origen", "estatus")
-        self.tabla = ttk.Treeview(
-            tabla_frame,
-            columns=columnas,
-            show="headings",
-            yscrollcommand=scroll_y.set,
-            xscrollcommand=scroll_x.set
-        )
-        scroll_y.config(command=self.tabla.yview)
-        scroll_x.config(command=self.tabla.xview)
-
-        encabezados = [
-            "Folio", "Fecha registro", "Cliente", "Dirección de entrega",
-            "Cantidad", "Monto Total", "Origen", "Estado"
-        ]
-        anchos = [115, 175, 210, 280, 125, 140, 130, 140]
         for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
-            self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
+            self.tabla.column(col, anchor="center", width=ancho)
 
-        scroll_y.pack(side="right", fill="y")
-        scroll_x.pack(side="bottom", fill="x")
-        self.tabla.pack(side="left", fill="both", expand=True)
+        self.tabla.pack(fill="both", expand=True, padx=20, pady=(5, 20))
 
     def cargar_datos(self):
-        precio_vigente = self.controller.db.obtener_precio_vigente()
-        val_precio = f"{float(precio_vigente):.2f}" if precio_vigente is not None else "00.00"
-        self.lbl_precio.configure(text=f"Precio vigente por litro (GLP-01): ${val_precio}")
+        precio = self.controller.db.obtener_precio_vigente()
+        self.lbl_precio.configure(
+            text=f"Precio por litro: ${precio:.2f}" if precio is not None else "Precio por litro: sin definir"
+        )
 
         for item in self.tabla.get_children():
             self.tabla.delete(item)
+        self.pedidos_map.clear()
 
-        condiciones = ["1=1"]
-        params = []
-
-        if self.controller.id_sucursal_actual:
-            condiciones.append("p.id_sucursal = %s")
-            params.append(self.controller.id_sucursal_actual)
-
-        estado_sel = self.var_estado.get()
-        if estado_sel != "Todos":
-            condiciones.append("p.estado_pedido = %s")
-            params.append(estado_sel)
-
-        origen_sel = self.var_origen.get()
-        if origen_sel != "Todos los orígenes":
-            condiciones.append("p.origen_pedido = %s")
-            params.append(origen_sel)
-
-        busqueda = self.entry_buscar.get().strip()
-        if busqueda:
-            condiciones.append("(p.folio LIKE %s OR c.nombre_cliente LIKE %s)")
-            like = f"%{busqueda}%"
-            params.extend([like, like])
-
-        where_sql = " AND ".join(condiciones)
-
-        query = f"""
+        sucursal = self.controller.id_sucursal_actual
+        query = """
             SELECT
                 p.id_pedido,
                 p.folio,
-                p.fecha_registro,
+                DATE_FORMAT(p.fecha_registro, '%%d/%%m/%%Y %%H:%%i') AS fecha_fmt,
                 c.nombre_cliente,
-                d.calle,
-                d.num_exterior,
-                col.nombre_colonia,
-                COALESCE(SUM(dp.cantidad), 0) AS total_cantidad,
-                COALESCE(SUM(dp.cantidad * pp.precio_producto), 0) AS total_monto,
+                d.calle, d.num_exterior, d.num_interior,
+                col.nombre_colonia, col.codigo_postal,
+                m.nombre_municipio, ef.nombre_entidad_fede,
+                COALESCE(SUM(dp.cantidad), 0) AS cantidad_total,
+                MAX(pr.tipo_producto) AS tipo_producto,
+                COALESCE(SUM(dp.cantidad * pp.precio_producto), 0) AS monto_total,
                 p.origen_pedido,
                 p.estado_pedido
             FROM pedido p
-            JOIN cliente c ON c.id_cliente = p.id_cliente
-            JOIN direccion d ON d.id_direccion = p.id_direccion_entrega
-            JOIN colonia col ON col.id_colonia = d.id_colonia
-            LEFT JOIN detalle_pedido dp ON dp.id_pedido = p.id_pedido
-            LEFT JOIN precio_producto pp ON pp.id_precio = dp.id_precio
-            WHERE {where_sql}
-            GROUP BY p.id_pedido, p.folio, p.fecha_registro, c.nombre_cliente,
-                     d.calle, d.num_exterior, col.nombre_colonia, p.origen_pedido, p.estado_pedido
-            ORDER BY p.id_pedido DESC
+            INNER JOIN cliente c ON p.id_cliente = c.id_cliente
+            INNER JOIN direccion d ON p.id_direccion_entrega = d.id_direccion
+            INNER JOIN colonia col ON d.id_colonia = col.id_colonia
+            INNER JOIN municipio m ON col.id_municipio = m.id_municipio
+            INNER JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
+            INNER JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
+            INNER JOIN producto pr ON dp.id_producto = pr.id_producto
+            INNER JOIN precio_producto pp ON dp.id_precio = pp.id_precio
+            WHERE (%s IS NULL OR p.id_sucursal = %s)
         """
-        filas = self.controller.db.consultar(query, tuple(params))
+        params = [sucursal, sucursal]
 
-        for f in filas:
-            self.tabla.insert(
-                "",
-                "end",
-                iid=str(f["id_pedido"]),
-                values=(
-                    f["folio"],
-                    formatear_fecha(f["fecha_registro"], "%d/%m/%Y %H:%M"),
-                    f["nombre_cliente"],
-                    armar_direccion(f["calle"], f["num_exterior"], f["nombre_colonia"]),
-                    f"{float(f['total_cantidad']):.2f} L",
-                    f"${float(f['total_monto']):,.2f}",
-                    f["origen_pedido"],
-                    f["estado_pedido"],
-                ),
-            )
+        estado = self.combo_estado.get()
+        if estado != "Todos los estados":
+            query += " AND p.estado_pedido = %s"
+            params.append(estado)
+
+        origen = self.combo_origen.get()
+        if origen != "Todos los orígenes":
+            query += " AND p.origen_pedido = %s"
+            params.append(origen)
+
+        texto = self.entry_busqueda.get().strip()
+        if texto:
+            query += " AND (c.nombre_cliente LIKE %s OR p.folio LIKE %s)"
+            params += [f"%{texto}%", f"%{texto}%"]
+
+        query += """
+            GROUP BY p.id_pedido, p.folio, p.fecha_registro, c.nombre_cliente,
+                     d.calle, d.num_exterior, d.num_interior, col.nombre_colonia,
+                     col.codigo_postal, m.nombre_municipio, ef.nombre_entidad_fede,
+                     p.origen_pedido, p.estado_pedido
+            ORDER BY p.fecha_registro DESC
+        """
+
+        for fila in self.controller.db.consultar(query, params):
+            unidad = "L" if fila["tipo_producto"] == "GAS_ESTACIONARIO" else "pzas"
+            direccion_txt = armar_direccion(fila)
+            item_id = self.tabla.insert("", "end", values=(
+                fila["folio"],
+                fila["fecha_fmt"],
+                fila["nombre_cliente"],
+                direccion_txt,
+                f"{float(fila['cantidad_total']):.2f} {unidad}",
+                f"${float(fila['monto_total']):,.2f}",
+                fila["origen_pedido"],
+                fila["estado_pedido"]
+            ))
+            self.pedidos_map[item_id] = fila["id_pedido"]
 
     def cambiar_estatus_pedido(self):
         seleccion = self.tabla.selection()
         if not seleccion:
-            messagebox.showwarning("Selecciona un pedido", "Haz clic sobre un pedido en la tabla para cambiar su estatus.")
+            messagebox.showwarning("Sin selección", "Primero haz clic sobre un pedido en la tabla.")
             return
 
-        id_pedido = seleccion[0]
-        nuevo_estado = self.var_nuevo_estatus.get()
+        id_pedido = self.pedidos_map.get(seleccion[0])
+        nuevo_estado = self.combo_nuevo_estado.get()
 
         if nuevo_estado == "ENTREGADO":
-            query = "UPDATE pedido SET estado_pedido = %s, fecha_entrega_real = NOW() WHERE id_pedido = %s"
+            sql = "UPDATE pedido SET estado_pedido = %s, fecha_entrega_real = NOW() WHERE id_pedido = %s"
         else:
-            query = "UPDATE pedido SET estado_pedido = %s, fecha_entrega_real = NULL WHERE id_pedido = %s"
+            sql = "UPDATE pedido SET estado_pedido = %s WHERE id_pedido = %s"
 
-        self.controller.db.ejecutar(query, (nuevo_estado, id_pedido))
+        self.controller.db.ejecutar(sql, (nuevo_estado, id_pedido))
         self.cargar_datos()
-        messagebox.showinfo("Estatus actualizado", f"El pedido quedó marcado como {nuevo_estado}.")
+        messagebox.showinfo("Actualizado", f"El pedido cambió a estatus: {nuevo_estado}")
 
     def tkraise(self, *args, **kwargs):
         super().tkraise(*args, **kwargs)

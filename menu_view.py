@@ -24,7 +24,7 @@ class MenuView(ctk.CTkFrame):
         )
         self.lbl_admin.pack(side="right", padx=35)
 
-        # Contenedor principal responsivo (se adapta a ventana normal y pantalla completa)
+        # Contenedor principal responsivo
         card = ctk.CTkFrame(self, fg_color="#F8F9FA", corner_radius=24)
         card.pack(fill="both", expand=True, padx=70, pady=50)
 
@@ -67,7 +67,7 @@ class MenuView(ctk.CTkFrame):
 
         btn_salir = ctk.CTkButton(
             card,
-            text="Salir",
+            text="Salir 🚪",
             fg_color="#FFFFFF",
             text_color="#C0392B",
             border_width=2,
@@ -82,7 +82,7 @@ class MenuView(ctk.CTkFrame):
         btn_salir.pack(pady=(5, 35))
 
     def cerrar_sesion(self):
-        """Limpia las variables de sesión y regresa al login"""
+        """Limpia las variables de sesión y regresa al login."""
         self.controller.admin_actual = None
         self.controller.id_sucursal_actual = None
         self.controller.mostrar_pantalla("login")

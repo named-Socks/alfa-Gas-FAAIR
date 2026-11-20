@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-from database import formatear_fecha, texto_a_fecha, SelectorFecha
+from database import SelectorFecha, texto_a_fecha
 
 
 class HistorialView(ctk.CTkFrame):
@@ -8,15 +8,15 @@ class HistorialView(ctk.CTkFrame):
         super().__init__(parent, fg_color="transparent")
         self.controller = controller
 
-        # Barra superior
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
+        # Navbar
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
             header,
             text="🔥 ALFA GAS      Historial de ventas",
-            font=("Arial", 28, "bold"),
+            font=("Arial", 24, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=35, pady=22)
+        ).pack(side="left", padx=30, pady=20)
 
         ctk.CTkButton(
             header,
@@ -24,168 +24,156 @@ class HistorialView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 16, "bold"),
-            height=42,
+            font=("Arial", 14, "bold"),
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=35)
+        ).pack(side="right", padx=30)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=12)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=10)
 
         self.lbl_precio = ctk.CTkLabel(
             self,
-            text="Precio vigente por litro: $00.00",
-            font=("Arial", 16, "bold"),
-            text_color="#214328"
+            text="Precio por litro: $00.00",
+            font=("Arial", 14, "bold"),
+            text_color="#7F8C8D"
         )
-        self.lbl_precio.pack(pady=(12, 0))
+        self.lbl_precio.place(relx=0.5, rely=0.07, anchor="center")
 
         # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=15)
+        main_frame.pack(fill="both", expand=True, padx=20, pady=(30, 20))
 
-        # Filtros con calendario clicable y búsqueda
-        filtros = ctk.CTkFrame(main_frame, fg_color="transparent")
-        filtros.pack(fill="x", padx=20, pady=(18, 8))
+        top_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        top_frame.pack(fill="x", padx=20, pady=20)
 
-        ctk.CTkLabel(filtros, text="Origen:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 8))
-        self.var_origen = ctk.StringVar(value="Todos")
-        ctk.CTkOptionMenu(
-            filtros,
-            variable=self.var_origen,
-            values=["Todos", "WHATSAPP", "ADMIN"],
-            width=150,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
-            fg_color="#F8F9FA",
+        ctk.CTkLabel(top_frame, text="Filtros rápidos", font=("Arial", 14, "bold"), text_color="#7F8C8D").pack(side="left")
+
+        self.combo_origen = ctk.CTkOptionMenu(
+            top_frame,
+            values=["Todos los orígenes", "WHATSAPP", "ADMIN"],
+            width=165,
+            fg_color="#FFFFFF",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
-        ).pack(side="left", padx=(0, 16))
+        )
+        self.combo_origen.pack(side="left", padx=(10, 25))
 
-        ctk.CTkLabel(filtros, text="Desde:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
-        self.entry_desde = SelectorFecha(filtros, placeholder="Fecha inicio", width=180, on_change=self.cargar_datos)
-        self.entry_desde.pack(side="left", padx=(0, 12))
+        ctk.CTkLabel(top_frame, text="Desde", font=("Arial", 14, "bold"), text_color="#7F8C8D").pack(side="left")
+        self.entry_desde = SelectorFecha(top_frame, width=135)
+        self.entry_desde.pack(side="left", padx=5)
 
-        ctk.CTkLabel(filtros, text="Hasta:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
-        self.entry_hasta = SelectorFecha(filtros, placeholder="Fecha fin", width=180, on_change=self.cargar_datos)
-        self.entry_hasta.pack(side="left", padx=(0, 12))
+        ctk.CTkLabel(top_frame, text="Hasta", font=("Arial", 14, "bold"), text_color="#7F8C8D").pack(side="left", padx=5)
+        self.entry_hasta = SelectorFecha(top_frame, width=135)
+        self.entry_hasta.pack(side="left", padx=5)
 
-        self.entry_buscar = ctk.CTkEntry(
-            filtros,
-            placeholder_text="🔍 Buscar nombre o folio...",
-            width=260,
-            height=38,
-            font=("Arial", 14),
+        ctk.CTkButton(
+            top_frame, text="🔄", width=40, fg_color="#F5CBA7", text_color="#000",
+            command=self.limpiar_filtros
+        ).pack(side="left", padx=3)
+
+        ctk.CTkButton(
+            top_frame, text="🔍", width=40, fg_color="#ABEBC6", text_color="#000",
+            command=self.cargar_datos
+        ).pack(side="left", padx=3)
+
+        self.entry_busqueda = ctk.CTkEntry(
+            top_frame,
+            placeholder_text="🔍 Buscar por nombre / folio",
+            width=250,
             corner_radius=20
         )
-        self.entry_buscar.pack(side="right")
-        self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
+        self.entry_busqueda.pack(side="right")
+        self.entry_busqueda.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        # Contenedor de tabla con barras de desplazamiento
-        tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
+        # Tabla
+        columnas = ("folio", "fecha", "nombre", "litros", "origen", "monto")
+        self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
+        encabezados = ["Folio", "Fecha entrega", "Cliente", "Cantidad surtida", "Origen", "Monto total"]
+        anchos = [110, 170, 260, 160, 130, 140]
 
-        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical")
-        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal")
-
-        columnas = ("folio", "fecha", "cliente", "litros", "origen", "monto")
-        self.tabla = ttk.Treeview(
-            tabla_frame,
-            columns=columnas,
-            show="headings",
-            yscrollcommand=scroll_y.set,
-            xscrollcommand=scroll_x.set
-        )
-        scroll_y.config(command=self.tabla.yview)
-        scroll_x.config(command=self.tabla.xview)
-
-        encabezados = ["Folio venta", "Fecha entrega", "Cliente", "Cantidad surtida", "Origen", "Monto total"]
-        anchos = [145, 185, 280, 180, 140, 165]
         for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
-            self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
+            self.tabla.column(col, anchor="center", width=ancho)
 
-        scroll_y.pack(side="right", fill="y")
-        scroll_x.pack(side="bottom", fill="x")
-        self.tabla.pack(side="left", fill="both", expand=True)
+        self.tabla.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+    def limpiar_filtros(self):
+        self.combo_origen.set("Todos los orígenes")
+        self.entry_desde.limpiar()
+        self.entry_hasta.limpiar()
+        self.entry_busqueda.delete(0, "end")
+        self.cargar_datos()
 
     def cargar_datos(self):
-        precio_vigente = self.controller.db.obtener_precio_vigente()
-        val_precio = f"{float(precio_vigente):.2f}" if precio_vigente is not None else "00.00"
-        self.lbl_precio.configure(text=f"Precio vigente por litro: ${val_precio}")
-
         try:
-            fecha_desde = texto_a_fecha(self.entry_desde.get())
-            fecha_hasta = texto_a_fecha(self.entry_hasta.get())
+            desde = texto_a_fecha(self.entry_desde.get())
+            hasta = texto_a_fecha(self.entry_hasta.get())
         except ValueError:
-            messagebox.showwarning("Fecha inválida", "Selecciona una fecha válida en el calendario.")
+            messagebox.showwarning("Fecha inválida", "Usa el formato dd/mm/aaaa.")
             return
+
+        precio = self.controller.db.obtener_precio_vigente()
+        self.lbl_precio.configure(
+            text=f"Precio por litro: ${precio:.2f}" if precio is not None else "Precio por litro: sin definir"
+        )
 
         for item in self.tabla.get_children():
             self.tabla.delete(item)
 
-        condiciones = ["p.estado_pedido = 'ENTREGADO'"]
-        params = []
-
-        if self.controller.id_sucursal_actual:
-            condiciones.append("p.id_sucursal = %s")
-            params.append(self.controller.id_sucursal_actual)
-
-        origen_sel = self.var_origen.get()
-        if origen_sel != "Todos":
-            condiciones.append("p.origen_pedido = %s")
-            params.append(origen_sel)
-
-        if fecha_desde:
-            condiciones.append("DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) >= %s")
-            params.append(fecha_desde)
-
-        if fecha_hasta:
-            condiciones.append("DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) <= %s")
-            params.append(fecha_hasta)
-
-        busqueda = self.entry_buscar.get().strip()
-        if busqueda:
-            condiciones.append("(p.folio LIKE %s OR c.nombre_cliente LIKE %s)")
-            like = f"%{busqueda}%"
-            params.extend([like, like])
-
-        where_sql = " AND ".join(condiciones)
-
-        query = f"""
+        sucursal = self.controller.id_sucursal_actual
+        query = """
             SELECT
                 p.folio,
-                COALESCE(p.fecha_entrega_real, p.fecha_registro) AS fecha_venta,
+                DATE_FORMAT(COALESCE(p.fecha_entrega_real, p.fecha_registro), '%%d/%%m/%%Y %%H:%%i') AS fecha_fmt,
                 c.nombre_cliente,
-                COALESCE(SUM(dp.cantidad), 0) AS total_litros,
+                COALESCE(SUM(dp.cantidad), 0) AS total_cantidad,
+                MAX(pr.tipo_producto) AS tipo_producto,
                 p.origen_pedido,
-                COALESCE(SUM(dp.cantidad * pp.precio_producto), 0) AS total_monto
+                COALESCE(SUM(dp.cantidad * pp.precio_producto), 0) AS total_calculado
             FROM pedido p
-            JOIN cliente c ON c.id_cliente = p.id_cliente
-            JOIN detalle_pedido dp ON dp.id_pedido = p.id_pedido
-            JOIN precio_producto pp ON pp.id_precio = dp.id_precio
-            WHERE {where_sql}
-            GROUP BY p.id_pedido, p.folio, fecha_venta, c.nombre_cliente, p.origen_pedido
-            ORDER BY fecha_venta DESC
+            INNER JOIN cliente c ON p.id_cliente = c.id_cliente
+            INNER JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
+            INNER JOIN producto pr ON dp.id_producto = pr.id_producto
+            INNER JOIN precio_producto pp ON dp.id_precio = pp.id_precio
+            WHERE p.estado_pedido = 'ENTREGADO'
+              AND (%s IS NULL OR p.id_sucursal = %s)
         """
-        filas = self.controller.db.consultar(query, tuple(params))
+        params = [sucursal, sucursal]
 
-        for f in filas:
-            self.tabla.insert(
-                "",
-                "end",
-                values=(
-                    f["folio"],
-                    formatear_fecha(f["fecha_venta"], "%d/%m/%Y %H:%M"),
-                    f["nombre_cliente"],
-                    f"{float(f['total_litros']):.2f} L",
-                    f["origen_pedido"],
-                    f"${float(f['total_monto']):,.2f}",
-                ),
-            )
+        origen = self.combo_origen.get()
+        if origen != "Todos los orígenes":
+            query += " AND p.origen_pedido = %s"
+            params.append(origen)
+
+        if desde:
+            query += " AND DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) >= %s"
+            params.append(desde)
+        if hasta:
+            query += " AND DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) <= %s"
+            params.append(hasta)
+
+        texto = self.entry_busqueda.get().strip()
+        if texto:
+            query += " AND (c.nombre_cliente LIKE %s OR p.folio LIKE %s)"
+            params += [f"%{texto}%", f"%{texto}%"]
+
+        query += """
+            GROUP BY p.id_pedido, p.folio, p.fecha_entrega_real, p.fecha_registro, c.nombre_cliente, p.origen_pedido
+            ORDER BY COALESCE(p.fecha_entrega_real, p.fecha_registro) DESC
+        """
+
+        for fila in self.controller.db.consultar(query, params):
+            unidad = "L" if fila["tipo_producto"] == "GAS_ESTACIONARIO" else "pzas"
+            self.tabla.insert("", "end", values=(
+                fila["folio"],
+                fila["fecha_fmt"],
+                fila["nombre_cliente"],
+                f"{float(fila['total_cantidad']):.2f} {unidad}",
+                fila["origen_pedido"],
+                f"${float(fila['total_calculado']):,.2f}"
+            ))
 
     def tkraise(self, *args, **kwargs):
         super().tkraise(*args, **kwargs)

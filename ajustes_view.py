@@ -94,7 +94,6 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         self.after(60, self._centrar_y_enfocar)
 
     def _crear_campo_password(self, parent, etiqueta):
-        """Crea un campo de contraseña con botón de ojito para mostrar/ocultar."""
         ctk.CTkLabel(
             parent,
             text=etiqueta,
@@ -132,7 +131,6 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         return entry
 
     def _alternar_visibilidad(self, entry, boton):
-        """Muestra u oculta el texto escrito en el campo de contraseña."""
         if entry.cget("show") == "•":
             entry.configure(show="")
             boton.configure(fg_color="#D5E8D4")
@@ -141,7 +139,6 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
             boton.configure(fg_color="#E9ECEF")
 
     def _centrar_y_enfocar(self):
-        """Centra la ventana respecto a la pantalla principal y activa el foco modal."""
         self.update_idletasks()
         master = self.master.winfo_toplevel()
         x = master.winfo_rootx() + (master.winfo_width() - self.winfo_width()) // 2
@@ -151,7 +148,6 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         self.entry_actual.focus_set()
 
     def guardar(self):
-        """Valida los tres campos y actualiza la contraseña en MySQL."""
         actual = self.entry_actual.get()
         nueva = self.entry_nueva.get()
         confirmar = self.entry_confirmar.get()
@@ -340,7 +336,6 @@ class AjustesView(ctk.CTkFrame):
         ).pack(side="bottom", pady=24, padx=22, fill="x")
 
     def _crear_tarjeta(self, parent, columna, titulo):
-        """Crea las 4 tarjetas con exactamente las mismas dimensiones."""
         card = ctk.CTkFrame(
             parent,
             fg_color="#FFFFFF",
@@ -365,7 +360,6 @@ class AjustesView(ctk.CTkFrame):
         return card
 
     def _actualizar_datos_pantalla(self):
-        """Refresca el precio actual, el usuario y la fecha del último respaldo."""
         precio = self.controller.db.obtener_precio_vigente()
         texto_precio = f"${float(precio):.2f}" if precio is not None else "$00.00"
         self.lbl_precio_actual.configure(text=f"Precio actual por litro de gas\n{texto_precio}")
@@ -386,7 +380,6 @@ class AjustesView(ctk.CTkFrame):
         )
 
     def abrir_modal_contrasena(self):
-        """Abre la ventana emergente para cambiar la contraseña del administrador."""
         if not self.controller.admin_actual:
             messagebox.showwarning("Sesión no detectada", "Inicia sesión nuevamente para cambiar tu contraseña.")
             return
@@ -409,7 +402,6 @@ class AjustesView(ctk.CTkFrame):
         )
 
     def guardar_nuevo_precio(self):
-        """Valida el monto ingresado y actualiza el precio vigente en MySQL."""
         texto = self.entry_nuevo_precio.get().strip().replace("$", "").replace(",", ".")
         if not texto:
             messagebox.showwarning("Campo vacío", "Escribe el nuevo precio por litro antes de guardar.")
@@ -418,7 +410,7 @@ class AjustesView(ctk.CTkFrame):
         try:
             nuevo_precio = round(float(texto), 2)
         except ValueError:
-            messagebox.showwarning("Precio inválido", "Ingresa un número válido, por ejemplo: 11.20")
+            messagebox.showwarning("Precio inválido", "Ingresa un número válido, por ejemplo: 10.50")
             return
 
         if nuevo_precio <= 0:
@@ -437,7 +429,6 @@ class AjustesView(ctk.CTkFrame):
             messagebox.showerror("Error", mensaje)
 
     def guardar_respaldo_manual(self):
-        """Abre el explorador para guardar la copia .sql donde elija el administrador."""
         nombre_sugerido = f"respaldo_alfagas_{datetime.now().strftime('%Y%m%d_%H%M')}.sql"
         ruta = filedialog.asksaveasfilename(
             title="Guardar respaldo de Base de Datos",

@@ -10,7 +10,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
         super().__init__(parent)
         self.db = db
         self.datos_cliente = datos_cliente
-        self.colonias_map = colonias_map  # {nombre_colonia: id_colonia}
+        self.colonias_map = colonias_map
         self.al_guardar = al_guardar
 
         self.title("Editar cliente - Alfa Gas")
@@ -230,7 +230,6 @@ class ModalEditarCliente(ctk.CTkToplevel):
         self.after(60, self._centrar_y_enfocar)
 
     def _centrar_y_enfocar(self):
-        """Centra la ventana respecto a la pantalla principal y activa el foco modal."""
         self.update_idletasks()
         master = self.master.winfo_toplevel()
         x = master.winfo_rootx() + (master.winfo_width() - self.winfo_width()) // 2
@@ -240,7 +239,6 @@ class ModalEditarCliente(ctk.CTkToplevel):
         self.entry_nombre.focus_set()
 
     def guardar(self):
-        """Valida los datos y actualiza el cliente (y su dirección vigente) en MySQL."""
         nombre = self.entry_nombre.get().strip()
         telefono = self.entry_telefono.get().strip()
         estatus = self.var_estatus.get()
@@ -440,7 +438,6 @@ class ClientesView(ctk.CTkFrame):
             self.tabla.heading(col, text=texto)
             self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
 
-        # Eventos para abrir edición al hacer clic en la columna "Editar" o doble clic en la fila
         self.tabla.bind("<ButtonRelease-1>", self._al_hacer_clic_tabla)
         self.tabla.bind("<Motion>", self._al_mover_mouse_tabla)
         self.tabla.bind("<Double-1>", self._al_doble_clic_tabla)
@@ -450,7 +447,6 @@ class ClientesView(ctk.CTkFrame):
         self.tabla.pack(side="left", fill="both", expand=True)
 
     def _es_columna_editar(self, event):
-        """Comprueba si el cursor está sobre una celda de la columna 'editar'."""
         if self.tabla.identify_region(event.x, event.y) != "cell":
             return False
         col_id = self.tabla.identify_column(event.x)
@@ -461,14 +457,12 @@ class ClientesView(ctk.CTkFrame):
         return 0 <= indice < len(columnas) and columnas[indice] == "editar"
 
     def _al_mover_mouse_tabla(self, event):
-        """Cambia el cursor a mano al pasar por la columna 'Editar'."""
         if self._es_columna_editar(event) and self.tabla.identify_row(event.y):
             self.tabla.configure(cursor="hand2")
         else:
             self.tabla.configure(cursor="")
 
     def _al_hacer_clic_tabla(self, event):
-        """Si se hizo clic en la celda '✏️ Editar', abre la ventana de edición de ese cliente."""
         if not self._es_columna_editar(event):
             return
         row_id = self.tabla.identify_row(event.y)
@@ -477,13 +471,11 @@ class ClientesView(ctk.CTkFrame):
             self._abrir_modal_por_id(row_id)
 
     def _al_doble_clic_tabla(self, _event):
-        """Permite abrir la edición con doble clic en cualquier parte de la fila."""
         seleccion = self.tabla.selection()
         if seleccion:
             self._abrir_modal_por_id(seleccion[0])
 
     def _abrir_modal_por_id(self, id_cliente_str):
-        """Abre la ventana emergente con los datos del cliente indicado."""
         if self._modal_editar is not None and self._modal_editar.winfo_exists():
             self._modal_editar.focus()
             return
@@ -549,7 +541,7 @@ class ClientesView(ctk.CTkFrame):
                 d.num_exterior,
                 col.nombre_colonia,
                 p.promedio_dias_consumo,
-                p.fecha_ultimo_pedido,
+                p.fecha_ultimo_ped,
                 p.fecha_estimada_agotamiento
             FROM cliente c
             LEFT JOIN direccion d
@@ -578,7 +570,7 @@ class ClientesView(ctk.CTkFrame):
                     f["telefono_whatsapp_cliente"],
                     direccion_txt,
                     frec_txt,
-                    formatear_fecha(f["fecha_ultimo_pedido"]),
+                    formatear_fecha(f["fecha_ultimo_ped"]),
                     formatear_fecha(f["fecha_estimada_agotamiento"]),
                     f["estado_cliente"],
                     "✏️ Editar",
