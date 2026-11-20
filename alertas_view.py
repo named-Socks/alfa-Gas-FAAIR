@@ -11,14 +11,14 @@ class AlertasView(ctk.CTkFrame):
         self._predicciones_cache = {}
 
         # Barra superior
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
             header,
             text="🔥 ALFA GAS      Alertas de predicción",
-            font=("Arial", 24, "bold"),
+            font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=30, pady=20)
+        ).pack(side="left", padx=35, pady=22)
 
         ctk.CTkButton(
             header,
@@ -26,13 +26,14 @@ class AlertasView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=42,
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=30)
+        ).pack(side="right", padx=35)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=10)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=12)
 
         # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
@@ -40,15 +41,18 @@ class AlertasView(ctk.CTkFrame):
 
         # Barra superior de filtros y botón de acción
         barra = ctk.CTkFrame(main_frame, fg_color="transparent")
-        barra.pack(fill="x", padx=20, pady=(15, 5))
+        barra.pack(fill="x", padx=20, pady=(18, 8))
 
-        ctk.CTkLabel(barra, text="Urgencia:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(barra, text="Urgencia:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 10))
         self.var_urgencia = ctk.StringVar(value="Todas")
         ctk.CTkOptionMenu(
             barra,
             variable=self.var_urgencia,
             values=["Todas", "Crítica / Vencida", "Hoy", "Próximos 3 días", "En tiempo"],
-            width=170,
+            width=205,
+            height=38,
+            font=("Arial", 14),
+            dropdown_font=("Arial", 14),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
@@ -61,23 +65,42 @@ class AlertasView(ctk.CTkFrame):
             fg_color="#214328",
             hover_color="#18321E",
             text_color="#FFFFFF",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 15, "bold"),
+            height=40,
             corner_radius=10,
             command=self.enviar_recordatorio_seleccionado
         ).pack(side="right")
 
-        # Tabla
+        # Contenedor de tabla con barras de desplazamiento
+        tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
+
+        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical")
+        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal")
+
         columnas = ("id_pred", "cliente", "telefono", "direccion", "fecha_agot", "cantidad_est", "prob", "urgencia", "notif")
-        self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
+        self.tabla = ttk.Treeview(
+            tabla_frame,
+            columns=columnas,
+            show="headings",
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=scroll_x.set
+        )
+        scroll_y.config(command=self.tabla.yview)
+        scroll_x.config(command=self.tabla.xview)
+
         encabezados = [
             "ID", "Cliente", "Teléfono", "Dirección",
             "Agotamiento est.", "Cantidad est.", "Probabilidad", "Prioridad", "Último aviso"
         ]
-        anchos = [45, 165, 105, 220, 110, 100, 95, 125, 115]
+        anchos = [65, 200, 140, 260, 175, 145, 140, 160, 150]
         for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
-            self.tabla.column(col, anchor="center", width=ancho)
-        self.tabla.pack(fill="both", expand=True, padx=20, pady=15)
+            self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
+
+        scroll_y.pack(side="right", fill="y")
+        scroll_x.pack(side="bottom", fill="x")
+        self.tabla.pack(side="left", fill="both", expand=True)
 
     def cargar_datos(self):
         for item in self.tabla.get_children():

@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-from database import formatear_fecha, texto_a_fecha
+from database import formatear_fecha, texto_a_fecha, SelectorFecha
 
 
 class HistorialView(ctk.CTkFrame):
@@ -9,14 +9,14 @@ class HistorialView(ctk.CTkFrame):
         self.controller = controller
 
         # Barra superior
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
             header,
             text="🔥 ALFA GAS      Historial de ventas",
-            font=("Arial", 24, "bold"),
+            font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=30, pady=20)
+        ).pack(side="left", padx=35, pady=22)
 
         ctk.CTkButton(
             header,
@@ -24,79 +24,93 @@ class HistorialView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=42,
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=30)
+        ).pack(side="right", padx=35)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=10)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=12)
 
         self.lbl_precio = ctk.CTkLabel(
             self,
             text="Precio vigente por litro: $00.00",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#214328"
         )
-        self.lbl_precio.pack(pady=(10, 0))
+        self.lbl_precio.pack(pady=(12, 0))
 
         # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=15)
 
-        # Filtros y búsqueda
+        # Filtros con calendario clicable y búsqueda
         filtros = ctk.CTkFrame(main_frame, fg_color="transparent")
-        filtros.pack(fill="x", padx=20, pady=(15, 5))
+        filtros.pack(fill="x", padx=20, pady=(18, 8))
 
-        ctk.CTkLabel(filtros, text="Origen:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
+        ctk.CTkLabel(filtros, text="Origen:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 8))
         self.var_origen = ctk.StringVar(value="Todos")
         ctk.CTkOptionMenu(
             filtros,
             variable=self.var_origen,
             values=["Todos", "WHATSAPP", "ADMIN"],
-            width=130,
+            width=150,
+            height=38,
+            font=("Arial", 14),
+            dropdown_font=("Arial", 14),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
-        ).pack(side="left", padx=(0, 15))
+        ).pack(side="left", padx=(0, 16))
 
-        ctk.CTkLabel(filtros, text="Desde:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
-        self.entry_desde = ctk.CTkEntry(filtros, placeholder_text="dd/mm/aaaa", width=110)
-        self.entry_desde.pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(filtros, text="Desde:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
+        self.entry_desde = SelectorFecha(filtros, placeholder="Fecha inicio", width=180, on_change=self.cargar_datos)
+        self.entry_desde.pack(side="left", padx=(0, 12))
 
-        ctk.CTkLabel(filtros, text="Hasta:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
-        self.entry_hasta = ctk.CTkEntry(filtros, placeholder_text="dd/mm/aaaa", width=110)
-        self.entry_hasta.pack(side="left", padx=(0, 10))
-
-        ctk.CTkButton(
-            filtros,
-            text="Filtrar",
-            width=80,
-            fg_color="#214328",
-            hover_color="#18321E",
-            font=("Arial", 13, "bold"),
-            command=self.cargar_datos
-        ).pack(side="left")
+        ctk.CTkLabel(filtros, text="Hasta:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
+        self.entry_hasta = SelectorFecha(filtros, placeholder="Fecha fin", width=180, on_change=self.cargar_datos)
+        self.entry_hasta.pack(side="left", padx=(0, 12))
 
         self.entry_buscar = ctk.CTkEntry(
             filtros,
             placeholder_text="🔍 Buscar nombre o folio...",
-            width=220,
+            width=260,
+            height=38,
+            font=("Arial", 14),
             corner_radius=20
         )
         self.entry_buscar.pack(side="right")
         self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        # Tabla
+        # Contenedor de tabla con barras de desplazamiento
+        tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
+
+        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical")
+        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal")
+
         columnas = ("folio", "fecha", "cliente", "litros", "origen", "monto")
-        self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
+        self.tabla = ttk.Treeview(
+            tabla_frame,
+            columns=columnas,
+            show="headings",
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=scroll_x.set
+        )
+        scroll_y.config(command=self.tabla.yview)
+        scroll_x.config(command=self.tabla.xview)
+
         encabezados = ["Folio venta", "Fecha entrega", "Cliente", "Cantidad surtida", "Origen", "Monto total"]
-        anchos = [110, 150, 240, 140, 120, 140]
+        anchos = [145, 185, 280, 180, 140, 165]
         for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
-            self.tabla.column(col, anchor="center", width=ancho)
-        self.tabla.pack(fill="both", expand=True, padx=20, pady=15)
+            self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
+
+        scroll_y.pack(side="right", fill="y")
+        scroll_x.pack(side="bottom", fill="x")
+        self.tabla.pack(side="left", fill="both", expand=True)
 
     def cargar_datos(self):
         precio_vigente = self.controller.db.obtener_precio_vigente()
@@ -107,7 +121,7 @@ class HistorialView(ctk.CTkFrame):
             fecha_desde = texto_a_fecha(self.entry_desde.get())
             fecha_hasta = texto_a_fecha(self.entry_hasta.get())
         except ValueError:
-            messagebox.showwarning("Fecha inválida", "Usa el formato dd/mm/aaaa en los filtros de fecha.")
+            messagebox.showwarning("Fecha inválida", "Selecciona una fecha válida en el calendario.")
             return
 
         for item in self.tabla.get_children():

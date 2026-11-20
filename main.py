@@ -13,18 +13,20 @@ from ajustes_view import AjustesView
 ctk.set_appearance_mode("Light")
 ctk.set_default_color_theme("green")
 
+
 class AlfaGasApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         self.title("Alfa Gas - Sistema Administrativo")
-        self.geometry("1200x800")
+        self.geometry("1280x820")
+        self.minsize(1100, 720)
         self.configure(fg_color="#E9ECEF")
 
         # Variables de sesión y BD
         self.db = BaseDatosLocal()
-        self.admin_actual = None          
-        self.id_sucursal_actual = None    
+        self.admin_actual = None
+        self.id_sucursal_actual = None
 
         self.configurar_estilo_tablas()
 
@@ -38,9 +40,25 @@ class AlfaGasApp(ctk.CTk):
     def configurar_estilo_tablas(self):
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("Treeview", font=("Arial", 10), rowheight=35, background="#FFFFFF", fieldbackground="#FFFFFF", borderwidth=0)
-        style.configure("Treeview.Heading", font=("Arial", 11, "bold"), background="#214328", foreground="#FFFFFF", borderwidth=1, relief="solid")
+        style.configure(
+            "Treeview",
+            font=("Arial", 13),
+            rowheight=44,
+            background="#FFFFFF",
+            fieldbackground="#FFFFFF",
+            borderwidth=0
+        )
+        style.configure(
+            "Treeview.Heading",
+            font=("Arial", 13, "bold"),
+            background="#214328",
+            foreground="#FFFFFF",
+            padding=(10, 12),
+            borderwidth=1,
+            relief="solid"
+        )
         style.map("Treeview", background=[("selected", "#D4E6D9")])
+        style.map("Treeview.Heading", background=[("active", "#18321E")])
 
     def registrar_vistas(self):
         clases_vistas = {
@@ -66,6 +84,7 @@ class AlfaGasApp(ctk.CTk):
         if vista:
             vista.tkraise()
 
+
 if __name__ == "__main__":
     app = AlfaGasApp()
-    app.mainloop()
+    app.mainloop()  

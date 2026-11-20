@@ -1,11 +1,13 @@
 import os
 import json
 import shutil
+import calendar
 import subprocess
-from datetime import datetime
+from datetime import datetime, date
 import mysql.connector
 from mysql.connector import Error
 import bcrypt
+import customtkinter as ctk
 
 
 def formatear_fecha(valor, formato="%d/%m/%Y"):
@@ -32,6 +34,295 @@ def armar_direccion(calle, num_exterior, colonia):
     return f"{calle} #{num_exterior}, Col. {colonia}"
 
 
+# ----------------------------------------------------------------------
+# Selector visual de fecha con calendario desplegable
+# ----------------------------------------------------------------------
+class _CalendarioPopup(ctk.CTkToplevel):
+    """Ventana emergente con calendario mensual para elegir una fecha con un clic."""
+
+    MESES = [
+        "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ]
+    DIAS_SEMANA = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"]
+
+    def __init__(self, parent, fecha_actual, al_seleccionar):
+        super().__init__(parent)
+        self.al_seleccionar = al_seleccionar
+        self.fecha_seleccionada = fecha_actual
+
+        referencia = fecha_actual or date.today()
+        self.anio = referencia.year
+        self.mes = referencia.month
+
+        self.title("Seleccionar fecha")
+        self.resizable(False, False)
+        self.configure(fg_color="#FFFFFF")
+        self.transient(parent.winfo_toplevel())
+        self.bind("<Escape>", lambda _: self.destroy())
+
+        # Encabezado verde con navegación de mes
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=48)
+        header.pack(fill="x")
+        header.pack_propagate(False)
+
+        ctk.CTkButton(
+            header,
+            text="◀",
+            width=36,
+            height=32,
+            fg_color="transparent",
+            hover_color="#18321E",
+            text_color="#FFFFFF",
+            font=("Arial", 15, "bold"),
+            command=self._mes_anterior
+        ).pack(side="left", padx=6)
+
+        self.lbl_mes_anio = ctk.CTkLabel(
+            header,
+            text="",
+            font=("Arial", 15, "bold"),
+            text_color="#FFFFFF"
+        )
+        self.lbl_mes_anio.pack(side="left", expand=True)
+
+        ctk.CTkButton(
+            header,
+            text="▶",
+            width=36,
+            height=32,
+            fg_color="transparent",
+            hover_color="#18321E",
+            text_color="#FFFFFF",
+            font=("Arial", 15, "bold"),
+            command=self._mes_siguiente
+        ).pack(side="right", padx=6)
+
+        # Cabecera de días de la semana
+        dias_header = ctk.CTkFrame(self, fg_color="#F4F6F7", corner_radius=0)
+        dias_header.pack(fill="x", padx=8, pady=(8, 2))
+        for i, dia_txt in enumerate(self.DIAS_SEMANA):
+            dias_header.grid_columnconfigure(i, weight=1, uniform="dias")
+            ctk.CTkLabel(
+                dias_header,
+                text=dia_txt,
+                font=("Arial", 13, "bold"),
+                text_color="#566573"
+            ).grid(row=0, column=i, pady=4)
+
+        # Cuadrícula de días del mes
+        self.grid_dias = ctk.CTkFrame(self, fg_color="transparent")
+        self.grid_dias.pack(fill="both", expand=True, padx=8, pady=4)
+        for i in range(7):
+            self.grid_dias.grid_columnconfigure(i, weight=1, uniform="celdas")
+
+        # Barra inferior rápida (Hoy / Limpiar)
+        footer = ctk.CTkFrame(self, fg_color="transparent")
+        footer.pack(fill="x", padx=10, pady=(4, 10))
+        footer.grid_columnconfigure((0, 1), weight=1)
+
+        ctk.CTkButton(
+            footer,
+            text="Hoy",
+            height=32,
+            fg_color="#E8F5E9",
+            text_color="#214328",
+            hover_color="#D5E8D4",
+            font=("Arial", 13, "bold"),
+            corner_radius=6,
+            command=lambda: self._elegir(date.today())
+        ).grid(row=0, column=0, padx=(0, 4), sticky="ew")
+
+        ctk.CTkButton(
+            footer,
+            text="Limpiar",
+            height=32,
+            fg_color="#F8F9FA",
+            text_color="#566573",
+            border_width=1,
+            border_color="#D5DBDB",
+            hover_color="#E9ECEF",
+            font=("Arial", 13),
+            corner_radius=6,
+            command=lambda: self._elegir(None)
+        ).grid(row=0, column=1, padx=(4, 0), sticky="ew")
+
+        self._dibujar_mes()
+        self.after(40, lambda: self._posicionar(parent))
+
+    def _posicionar(self, widget_origen):
+        """Coloca el calendario justo debajo del botón sin salirse de la pantalla."""
+        self.update_idletasks()
+        ancho = 310
+        alto = 325
+        x = widget_origen.winfo_rootx()
+        y = widget_origen.winfo_rooty() + widget_origen.winfo_height() + 4
+
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        if x + ancho > sw:
+            x = max(10, sw - ancho - 10)
+        if y + alto > sh:
+            y = max(10, widget_origen.winfo_rooty() - alto - 4)
+
+        self.geometry(f"{ancho}x{alto}+{x}+{y}")
+        self.grab_set()
+        self.focus_set()
+
+    def _mes_anterior(self):
+        if self.mes == 1:
+            self.mes = 12
+            self.anio -= 1
+        else:
+            self.mes -= 1
+        self._dibujar_mes()
+
+    def _mes_siguiente(self):
+        if self.mes == 12:
+            self.mes = 1
+            self.anio += 1
+        else:
+            self.mes += 1
+        self._dibujar_mes()
+
+    def _dibujar_mes(self):
+        self.lbl_mes_anio.configure(text=f"{self.MESES[self.mes]} {self.anio}")
+        for hijo in self.grid_dias.winfo_children():
+            hijo.destroy()
+
+        hoy = date.today()
+        semanas = calendar.monthcalendar(self.anio, self.mes)
+
+        for fila_idx, semana in enumerate(semanas):
+            for col_idx, dia in enumerate(semana):
+                if dia == 0:
+                    ctk.CTkLabel(self.grid_dias, text="", height=32).grid(row=fila_idx, column=col_idx, padx=1, pady=1)
+                    continue
+
+                fecha_celda = date(self.anio, self.mes, dia)
+                es_seleccionada = (self.fecha_seleccionada == fecha_celda)
+                es_hoy = (hoy == fecha_celda)
+
+                if es_seleccionada:
+                    fg = "#214328"
+                    txt_color = "#FFFFFF"
+                    hover = "#18321E"
+                    borde = 0
+                    fuente = ("Arial", 13, "bold")
+                elif es_hoy:
+                    fg = "#E8F5E9"
+                    txt_color = "#214328"
+                    hover = "#D5E8D4"
+                    borde = 1
+                    fuente = ("Arial", 13, "bold")
+                else:
+                    fg = "transparent"
+                    txt_color = "#2C3E50"
+                    hover = "#E9ECEF"
+                    borde = 0
+                    fuente = ("Arial", 13)
+
+                ctk.CTkButton(
+                    self.grid_dias,
+                    text=str(dia),
+                    width=36,
+                    height=32,
+                    corner_radius=6,
+                    fg_color=fg,
+                    text_color=txt_color,
+                    hover_color=hover,
+                    border_width=borde,
+                    border_color="#214328",
+                    font=fuente,
+                    command=lambda f=fecha_celda: self._elegir(f)
+                ).grid(row=fila_idx, column=col_idx, padx=1, pady=1, sticky="nsew")
+
+    def _elegir(self, fecha_elegida):
+        self.destroy()
+        self.al_seleccionar(fecha_elegida)
+
+
+class SelectorFecha(ctk.CTkFrame):
+    """Campo clicable que abre un calendario desplegable y permite limpiar la fecha."""
+
+    def __init__(self, parent, placeholder="Elegir fecha", width=180, on_change=None):
+        super().__init__(
+            parent,
+            fg_color="#F8F9FA",
+            corner_radius=8,
+            border_width=1,
+            border_color="#BDC3C7",
+            width=width,
+            height=38
+        )
+        self.pack_propagate(False)
+        self.placeholder = placeholder
+        self.on_change = on_change
+        self._fecha = None
+        self._popup = None
+
+        self.btn_fecha = ctk.CTkButton(
+            self,
+            text=f"📅 {placeholder}",
+            fg_color="transparent",
+            text_color="#566573",
+            hover_color="#E9ECEF",
+            font=("Arial", 14),
+            anchor="w",
+            command=self._abrir_calendario
+        )
+        self.btn_fecha.pack(side="left", fill="both", expand=True, padx=(4, 0))
+
+        self.btn_limpiar = ctk.CTkButton(
+            self,
+            text="✕",
+            width=26,
+            height=26,
+            corner_radius=6,
+            fg_color="transparent",
+            text_color="#7F8C8D",
+            hover_color="#FADBD8",
+            font=("Arial", 13, "bold"),
+            command=self.limpiar
+        )
+
+    def _abrir_calendario(self):
+        if self._popup is not None and self._popup.winfo_exists():
+            self._popup.focus()
+            return
+        self._popup = _CalendarioPopup(self, self._fecha, self.set_fecha)
+
+    def set_fecha(self, nueva_fecha):
+        self._fecha = nueva_fecha
+        if nueva_fecha:
+            self.btn_fecha.configure(
+                text=f"📅 {nueva_fecha.strftime('%d/%m/%Y')}",
+                text_color="#214328",
+                font=("Arial", 14, "bold")
+            )
+            self.btn_limpiar.pack(side="right", padx=(0, 4))
+        else:
+            self.btn_fecha.configure(
+                text=f"📅 {self.placeholder}",
+                text_color="#566573",
+                font=("Arial", 14)
+            )
+            self.btn_limpiar.pack_forget()
+
+        if self.on_change:
+            self.on_change()
+
+    def limpiar(self):
+        self.set_fecha(None)
+
+    def get(self):
+        """Devuelve la fecha en formato 'dd/mm/aaaa' o '' si está vacía."""
+        return self._fecha.strftime("%d/%m/%Y") if self._fecha else ""
+
+
+# ----------------------------------------------------------------------
+# Clase principal de conexión y operaciones con MySQL
+# ----------------------------------------------------------------------
 class BaseDatosLocal:
     def __init__(self):
         self.host = "localhost"
@@ -231,7 +522,6 @@ class BaseDatosLocal:
                 if adm:
                     id_adm = adm["id_adm"]
 
-            # Si ya existe un precio BASE iniciado hoy, se actualiza para evitar choque con uq_precio_periodo
             cursor.execute(
                 """
                 SELECT id_precio FROM precio_producto

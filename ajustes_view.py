@@ -12,19 +12,19 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         self.identificador_admin = identificador_admin
 
         self.title("Seguridad de usuario - Alfa Gas")
-        self.geometry("430x475")
+        self.geometry("480x540")
         self.resizable(False, False)
         self.configure(fg_color="#F4F6F7")
         self.transient(parent.winfo_toplevel())
 
         # Encabezado verde institucional
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=62)
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=68)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
         ctk.CTkLabel(
             header,
             text="🔒  Cambiar contraseña",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 20, "bold"),
             text_color="#FFFFFF"
         ).pack(side="left", padx=24)
 
@@ -41,9 +41,9 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         ctk.CTkLabel(
             card,
             text=f"Cuenta: {texto_cuenta}",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 15, "bold"),
             text_color="#214328"
-        ).pack(anchor="w", padx=22, pady=(16, 8))
+        ).pack(anchor="w", padx=24, pady=(18, 10))
 
         self.entry_actual = self._crear_campo_password(card, "Contraseña actual")
         self.entry_nueva = self._crear_campo_password(card, "Nueva contraseña (mínimo 5 caracteres)")
@@ -53,28 +53,28 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         self.lbl_error = ctk.CTkLabel(
             card,
             text="",
-            font=("Arial", 12, "bold"),
+            font=("Arial", 14, "bold"),
             text_color="#C0392B",
-            wraplength=340,
+            wraplength=390,
             justify="center"
         )
-        self.lbl_error.pack(pady=(10, 4), padx=20)
+        self.lbl_error.pack(pady=(12, 6), padx=20)
 
         # Botones inferiores
         fila_botones = ctk.CTkFrame(card, fg_color="transparent")
-        fila_botones.pack(fill="x", side="bottom", padx=22, pady=(6, 18))
+        fila_botones.pack(fill="x", side="bottom", padx=24, pady=(8, 20))
         fila_botones.grid_columnconfigure((0, 1), weight=1)
 
         ctk.CTkButton(
             fila_botones,
             text="Cancelar",
-            height=38,
+            height=42,
             fg_color="#FFFFFF",
             text_color="#2C3E50",
             border_width=1,
             border_color="#BDC3C7",
             hover_color="#E9ECEF",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 15, "bold"),
             corner_radius=8,
             command=self.destroy
         ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
@@ -82,11 +82,11 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         ctk.CTkButton(
             fila_botones,
             text="Guardar contraseña",
-            height=38,
+            height=42,
             fg_color="#214328",
             text_color="#FFFFFF",
             hover_color="#18321E",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 15, "bold"),
             corner_radius=8,
             command=self.guardar
         ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
@@ -98,16 +98,17 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         ctk.CTkLabel(
             parent,
             text=etiqueta,
-            font=("Arial", 13, "bold"),
+            font=("Arial", 15, "bold"),
             text_color="#2C3E50"
-        ).pack(anchor="w", padx=22, pady=(8, 3))
+        ).pack(anchor="w", padx=24, pady=(10, 4))
 
         fila = ctk.CTkFrame(parent, fg_color="transparent")
-        fila.pack(fill="x", padx=22)
+        fila.pack(fill="x", padx=24)
 
         entry = ctk.CTkEntry(
             fila,
-            height=36,
+            height=42,
+            font=("Arial", 15),
             corner_radius=8,
             border_color="#BDC3C7",
             show="•"
@@ -117,8 +118,9 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         btn_ojo = ctk.CTkButton(
             fila,
             text="👁️",
-            width=38,
-            height=36,
+            width=42,
+            height=42,
+            font=("Arial", 16),
             corner_radius=8,
             fg_color="#E9ECEF",
             text_color="#2C3E50",
@@ -185,14 +187,14 @@ class AjustesView(ctk.CTkFrame):
         self._modal_pass = None
 
         # Barra superior verde
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
             header,
             text="🔥 ALFA GAS      Configuración y ajustes",
-            font=("Arial", 24, "bold"),
+            font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=30, pady=20)
+        ).pack(side="left", padx=35, pady=22)
 
         ctk.CTkButton(
             header,
@@ -200,20 +202,24 @@ class AjustesView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=42,
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=30)
+        ).pack(side="right", padx=35)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=10)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=12)
 
-        # Contenedor principal de las 4 tarjetas
-        main_frame = ctk.CTkFrame(self, fg_color="transparent")
-        main_frame.pack(fill="both", expand=True, padx=20, pady=40)
+        # Área central para mantener las 4 tarjetas centradas y con altura equilibrada
+        area_central = ctk.CTkFrame(self, fg_color="transparent")
+        area_central.pack(fill="both", expand=True)
 
-        for i in range(4):
-            main_frame.grid_columnconfigure(i, weight=1, uniform="cards")
+        main_frame = ctk.CTkFrame(area_central, fg_color="transparent")
+        main_frame.place(relx=0.5, rely=0.48, anchor="center")
+
+        main_frame.grid_rowconfigure(0, weight=1, uniform="cards_row")
+        main_frame.grid_columnconfigure((0, 1, 2, 3), weight=1, uniform="cards_col")
 
         # --------------------------------------------------------------
         # TARJETA 1: Configuración de precios
@@ -223,16 +229,28 @@ class AjustesView(ctk.CTkFrame):
         self.lbl_precio_actual = ctk.CTkLabel(
             card_precio,
             text="Precio actual por litro de gas\n$00.00",
-            font=("Arial", 14),
+            font=("Arial", 16),
             text_color="#2C3E50",
             justify="center"
         )
-        self.lbl_precio_actual.pack(pady=(25, 10))
+        self.lbl_precio_actual.pack(pady=(35, 16))
 
         fila_nuevo_precio = ctk.CTkFrame(card_precio, fg_color="transparent")
-        fila_nuevo_precio.pack(pady=5)
-        ctk.CTkLabel(fila_nuevo_precio, text="Nuevo precio: $", font=("Arial", 14), text_color="#2C3E50").pack(side="left")
-        self.entry_nuevo_precio = ctk.CTkEntry(fila_nuevo_precio, placeholder_text="00.00", width=85, justify="center")
+        fila_nuevo_precio.pack(pady=6)
+        ctk.CTkLabel(
+            fila_nuevo_precio,
+            text="Nuevo precio: $",
+            font=("Arial", 15, "bold"),
+            text_color="#2C3E50"
+        ).pack(side="left")
+        self.entry_nuevo_precio = ctk.CTkEntry(
+            fila_nuevo_precio,
+            placeholder_text="00.00",
+            width=95,
+            height=38,
+            font=("Arial", 15),
+            justify="center"
+        )
         self.entry_nuevo_precio.pack(side="left")
         self.entry_nuevo_precio.bind("<Return>", lambda _: self.guardar_nuevo_precio())
 
@@ -244,23 +262,24 @@ class AjustesView(ctk.CTkFrame):
             border_width=2,
             border_color="#214328",
             hover_color="#E9ECEF",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=46,
             corner_radius=0,
             command=self.guardar_nuevo_precio
-        ).pack(side="bottom", pady=20, padx=20, fill="x")
+        ).pack(side="bottom", pady=24, padx=22, fill="x")
 
         # --------------------------------------------------------------
         # TARJETA 2: Conexión con WhatsApp
         # --------------------------------------------------------------
-        card_wa = self._crear_tarjeta(main_frame, 1, "Conexión con whatsapp")
+        card_wa = self._crear_tarjeta(main_frame, 1, "Conexión con WhatsApp")
 
         ctk.CTkLabel(
             card_wa,
-            text="Número: +52 449 000 00 00\n\nApi key: [**********] 👁️",
-            font=("Arial", 14),
+            text="Número:\n+52 449 000 00 00\n\nApi key:\n[**********] 👁️",
+            font=("Arial", 16),
             text_color="#2C3E50",
             justify="center"
-        ).pack(pady=35)
+        ).pack(pady=(35, 10))
 
         # --------------------------------------------------------------
         # TARJETA 3: Seguridad de usuario
@@ -269,13 +288,13 @@ class AjustesView(ctk.CTkFrame):
 
         self.lbl_usuario_seg = ctk.CTkLabel(
             card_seg,
-            text="Usuario: admin\n\nContraseña: [**********]",
-            font=("Arial", 14),
+            text="Usuario:\nadmin\n\nContraseña:\n••••••••••",
+            font=("Arial", 16),
             text_color="#2C3E50",
             justify="center",
-            wraplength=220
+            wraplength=240
         )
-        self.lbl_usuario_seg.pack(pady=35)
+        self.lbl_usuario_seg.pack(pady=(35, 10))
 
         ctk.CTkButton(
             card_seg,
@@ -285,10 +304,11 @@ class AjustesView(ctk.CTkFrame):
             border_width=2,
             border_color="#214328",
             hover_color="#E9ECEF",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=46,
             corner_radius=0,
             command=self.abrir_modal_contrasena
-        ).pack(side="bottom", pady=20, padx=20, fill="x")
+        ).pack(side="bottom", pady=24, padx=22, fill="x")
 
         # --------------------------------------------------------------
         # TARJETA 4: Base de datos local (Respaldo manual)
@@ -297,13 +317,13 @@ class AjustesView(ctk.CTkFrame):
 
         self.lbl_ultimo_respaldo = ctk.CTkLabel(
             card_bd,
-            text="Último respaldo: 00/00/0000",
-            font=("Arial", 14),
+            text="Último respaldo:\n00/00/0000",
+            font=("Arial", 16),
             text_color="#2C3E50",
             justify="center",
-            wraplength=220
+            wraplength=240
         )
-        self.lbl_ultimo_respaldo.pack(pady=40)
+        self.lbl_ultimo_respaldo.pack(pady=(35, 10))
 
         ctk.CTkButton(
             card_bd,
@@ -313,32 +333,34 @@ class AjustesView(ctk.CTkFrame):
             border_width=2,
             border_color="#214328",
             hover_color="#E9ECEF",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=46,
             corner_radius=0,
             command=self.guardar_respaldo_manual
-        ).pack(side="bottom", pady=20, padx=20, fill="x")
+        ).pack(side="bottom", pady=24, padx=22, fill="x")
 
     def _crear_tarjeta(self, parent, columna, titulo):
-        """Crea la estructura visual uniforme de cada tarjeta."""
+        """Crea las 4 tarjetas con exactamente las mismas dimensiones."""
         card = ctk.CTkFrame(
             parent,
             fg_color="#FFFFFF",
             border_width=1,
             border_color="#BDC3C7",
-            width=250,
-            height=300
+            width=285,
+            height=380
         )
-        card.grid(row=0, column=columna, padx=15, pady=20, sticky="nsew")
-        card.grid_propagate(False)
+        card.grid(row=0, column=columna, padx=12, pady=10, sticky="nsew")
+        card.pack_propagate(False)
 
-        card_header = ctk.CTkFrame(card, fg_color="#214328", corner_radius=0, height=50)
+        card_header = ctk.CTkFrame(card, fg_color="#214328", corner_radius=0, height=58)
         card_header.pack(fill="x", side="top")
+        card_header.pack_propagate(False)
         ctk.CTkLabel(
             card_header,
             text=titulo,
-            font=("Arial", 14, "bold"),
+            font=("Arial", 17, "bold"),
             text_color="#FFFFFF"
-        ).pack(pady=12)
+        ).pack(expand=True)
 
         return card
 
@@ -355,12 +377,12 @@ class AjustesView(ctk.CTkFrame):
             usuario_mostrar = self.controller.admin_actual or "admin"
 
         self.lbl_usuario_seg.configure(
-            text=f"Usuario: {usuario_mostrar}\n\nContraseña: ••••••••••"
+            text=f"Usuario:\n{usuario_mostrar}\n\nContraseña:\n••••••••••"
         )
 
         fecha_respaldo = self.controller.db.obtener_fecha_ultimo_respaldo()
         self.lbl_ultimo_respaldo.configure(
-            text=f"Último respaldo:\n{fecha_respaldo}" if fecha_respaldo else "Último respaldo: 00/00/0000"
+            text=f"Último respaldo:\n{fecha_respaldo}" if fecha_respaldo else "Último respaldo:\n00/00/0000"
         )
 
     def abrir_modal_contrasena(self):

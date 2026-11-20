@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
-from database import texto_a_fecha
+from database import texto_a_fecha, SelectorFecha
 
 
 class ReportesView(ctk.CTkFrame):
@@ -12,14 +12,14 @@ class ReportesView(ctk.CTkFrame):
         self._filas_reporte = []
 
         # Barra superior
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
             header,
             text="🔥 ALFA GAS      Reportes de ventas por zona",
-            font=("Arial", 24, "bold"),
+            font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=30, pady=20)
+        ).pack(side="left", padx=35, pady=22)
 
         ctk.CTkButton(
             header,
@@ -27,13 +27,14 @@ class ReportesView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=42,
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=30)
+        ).pack(side="right", padx=35)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=10)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=12)
 
         # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
@@ -41,85 +42,132 @@ class ReportesView(ctk.CTkFrame):
 
         # Fila 1 de filtros geográficos
         filtros_geo = ctk.CTkFrame(main_frame, fg_color="transparent")
-        filtros_geo.pack(fill="x", padx=20, pady=(15, 5))
+        filtros_geo.pack(fill="x", padx=20, pady=(18, 6))
 
         self.var_estado = ctk.StringVar(value="Todos los estados")
         self.menu_estado = ctk.CTkOptionMenu(
-            filtros_geo, variable=self.var_estado, values=["Todos los estados"],
-            width=165, fg_color="#F8F9FA", text_color="#2C3E50", button_color="#D5DBDB",
+            filtros_geo,
+            variable=self.var_estado,
+            values=["Todos los estados"],
+            width=195,
+            height=38,
+            font=("Arial", 14),
+            dropdown_font=("Arial", 14),
+            fg_color="#F8F9FA",
+            text_color="#2C3E50",
+            button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.menu_estado.pack(side="left", padx=(0, 10))
+        self.menu_estado.pack(side="left", padx=(0, 12))
 
         self.var_municipio = ctk.StringVar(value="Todos los municipios")
         self.menu_municipio = ctk.CTkOptionMenu(
-            filtros_geo, variable=self.var_municipio, values=["Todos los municipios"],
-            width=175, fg_color="#F8F9FA", text_color="#2C3E50", button_color="#D5DBDB",
+            filtros_geo,
+            variable=self.var_municipio,
+            values=["Todos los municipios"],
+            width=210,
+            height=38,
+            font=("Arial", 14),
+            dropdown_font=("Arial", 14),
+            fg_color="#F8F9FA",
+            text_color="#2C3E50",
+            button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.menu_municipio.pack(side="left", padx=(0, 10))
+        self.menu_municipio.pack(side="left", padx=(0, 12))
 
         self.var_colonia = ctk.StringVar(value="Todas las colonias")
         self.menu_colonia = ctk.CTkOptionMenu(
-            filtros_geo, variable=self.var_colonia, values=["Todas las colonias"],
-            width=180, fg_color="#F8F9FA", text_color="#2C3E50", button_color="#D5DBDB",
+            filtros_geo,
+            variable=self.var_colonia,
+            values=["Todas las colonias"],
+            width=210,
+            height=38,
+            font=("Arial", 14),
+            dropdown_font=("Arial", 14),
+            fg_color="#F8F9FA",
+            text_color="#2C3E50",
+            button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.menu_colonia.pack(side="left", padx=(0, 10))
+        self.menu_colonia.pack(side="left", padx=(0, 12))
 
-        self.entry_calle = ctk.CTkEntry(filtros_geo, placeholder_text="Filtrar por calle...", width=180)
+        self.entry_calle = ctk.CTkEntry(
+            filtros_geo,
+            placeholder_text="Filtrar por calle...",
+            width=220,
+            height=38,
+            font=("Arial", 14)
+        )
         self.entry_calle.pack(side="left")
         self.entry_calle.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        # Fila 2 de fechas y exportación
+        # Fila 2 de fechas con calendario clicable y exportación
         filtros_fecha = ctk.CTkFrame(main_frame, fg_color="transparent")
-        filtros_fecha.pack(fill="x", padx=20, pady=(5, 10))
+        filtros_fecha.pack(fill="x", padx=20, pady=(6, 12))
 
-        ctk.CTkLabel(filtros_fecha, text="Desde:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
-        self.entry_desde = ctk.CTkEntry(filtros_fecha, placeholder_text="dd/mm/aaaa", width=110)
-        self.entry_desde.pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(filtros_fecha, text="Desde:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
+        self.entry_desde = SelectorFecha(filtros_fecha, placeholder="Fecha inicio", width=180, on_change=self.cargar_datos)
+        self.entry_desde.pack(side="left", padx=(0, 14))
 
-        ctk.CTkLabel(filtros_fecha, text="Hasta:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
-        self.entry_hasta = ctk.CTkEntry(filtros_fecha, placeholder_text="dd/mm/aaaa", width=110)
-        self.entry_hasta.pack(side="left", padx=(0, 10))
-
-        ctk.CTkButton(
-            filtros_fecha, text="Aplicar", width=85,
-            fg_color="#214328", hover_color="#18321E", font=("Arial", 13, "bold"),
-            command=self.cargar_datos
-        ).pack(side="left")
+        ctk.CTkLabel(filtros_fecha, text="Hasta:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 6))
+        self.entry_hasta = SelectorFecha(filtros_fecha, placeholder="Fecha fin", width=180, on_change=self.cargar_datos)
+        self.entry_hasta.pack(side="left", padx=(0, 12))
 
         ctk.CTkButton(
-            filtros_fecha, text="📥 Exportar CSV", width=130,
-            fg_color="#214328", hover_color="#18321E", font=("Arial", 13, "bold"),
+            filtros_fecha,
+            text="📥 Exportar CSV",
+            width=165,
+            height=38,
+            fg_color="#214328",
+            hover_color="#18321E",
+            font=("Arial", 15, "bold"),
             command=self.exportar_csv
         ).pack(side="right")
 
         # Tarjetas de resumen ejecutivo
         tarjetas = ctk.CTkFrame(main_frame, fg_color="transparent")
-        tarjetas.pack(fill="x", padx=20, pady=5)
+        tarjetas.pack(fill="x", padx=20, pady=8)
         tarjetas.grid_columnconfigure((0, 1, 2), weight=1)
 
         self.lbl_total_ingresos = self._crear_kpi(tarjetas, 0, "Total de Ingresos", "$0.00")
         self.lbl_total_litros = self._crear_kpi(tarjetas, 1, "Total de litros vendidos", "0.00 L")
         self.lbl_total_pedidos = self._crear_kpi(tarjetas, 2, "Total de pedidos", "0")
 
-        # Tabla consolidada por zona
+        # Contenedor de tabla con barras de desplazamiento
+        tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
+
+        scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical")
+        scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal")
+
         columnas = ("ubicacion", "colonia", "calle", "pedidos", "litros", "ingresos")
-        self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
+        self.tabla = ttk.Treeview(
+            tabla_frame,
+            columns=columnas,
+            show="headings",
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=scroll_x.set
+        )
+        scroll_y.config(command=self.tabla.yview)
+        scroll_x.config(command=self.tabla.xview)
+
         encabezados = ["Estado / Municipio", "Colonia", "Calle", "Pedidos", "Litros vendidos", "Total Ingresos"]
-        anchos = [190, 175, 210, 90, 130, 140]
+        anchos = [240, 200, 240, 120, 175, 175]
         for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
-            self.tabla.column(col, anchor="center", width=ancho)
-        self.tabla.pack(fill="both", expand=True, padx=20, pady=15)
+            self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
+
+        scroll_y.pack(side="right", fill="y")
+        scroll_x.pack(side="bottom", fill="x")
+        self.tabla.pack(side="left", fill="both", expand=True)
 
     def _crear_kpi(self, parent, col, titulo, valor_inicial):
         box = ctk.CTkFrame(parent, fg_color="#F8F9FA", corner_radius=12, border_width=1, border_color="#D5DBDB")
         box.grid(row=0, column=col, padx=8, sticky="ew")
-        ctk.CTkLabel(box, text=titulo, font=("Arial", 13, "bold"), text_color="#7F8C8D").pack(pady=(10, 2))
-        lbl = ctk.CTkLabel(box, text=valor_inicial, font=("Arial", 20, "bold"), text_color="#214328")
-        lbl.pack(pady=(0, 10))
+        ctk.CTkLabel(box, text=titulo, font=("Arial", 15, "bold"), text_color="#7F8C8D").pack(pady=(12, 4))
+        lbl = ctk.CTkLabel(box, text=valor_inicial, font=("Arial", 24, "bold"), text_color="#214328")
+        lbl.pack(pady=(0, 12))
         return lbl
 
     def _cargar_catalogos(self):
@@ -137,7 +185,7 @@ class ReportesView(ctk.CTkFrame):
             fecha_desde = texto_a_fecha(self.entry_desde.get())
             fecha_hasta = texto_a_fecha(self.entry_hasta.get())
         except ValueError:
-            messagebox.showwarning("Fecha inválida", "Usa el formato dd/mm/aaaa en los filtros de fecha.")
+            messagebox.showwarning("Fecha inválida", "Selecciona una fecha válida en el calendario.")
             return
 
         for item in self.tabla.get_children():
