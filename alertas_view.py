@@ -59,17 +59,18 @@ class AlertasView(ctk.CTkFrame):
             command=lambda _: self.cargar_datos()
         ).pack(side="left")
 
-        ctk.CTkButton(
-            barra,
-            text="📲 Registrar envío de recordatorio",
-            fg_color="#214328",
-            hover_color="#18321E",
-            text_color="#FFFFFF",
-            font=("Arial", 15, "bold"),
-            height=40,
-            corner_radius=10,
-            command=self.enviar_recordatorio_seleccionado
-        ).pack(side="right")
+
+ #       ctk.CTkButton(
+  #          barra,
+ #           text="📲 Registrar envío de recordatorio",
+#            fg_color="#214328",
+ #           hover_color="#18321E",
+#            text_color="#FFFFFF",
+#         font=("Arial", 15, "bold"),
+#            height=40,
+ #           corner_radius=10,
+#            command=self.enviar_recordatorio_seleccionado
+ #       ).pack(side="right")
 
         # Contenedor de tabla con barras de desplazamiento
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
