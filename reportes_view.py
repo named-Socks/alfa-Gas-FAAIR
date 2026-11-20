@@ -1,14 +1,17 @@
+import csv
+from datetime import datetime
 import customtkinter as ctk
-from tkinter import ttk, messagebox
-from database import formatear_fecha, texto_a_fecha
+from tkinter import ttk, filedialog, messagebox
+from database import texto_a_fecha
 
 
 class ReportesView(ctk.CTkFrame):
     def __init__(self, parent, controller):
         super().__init__(parent, fg_color="transparent")
         self.controller = controller
+        self._filas_reporte = []
 
-        # Encabezado principal
+        # Barra superior
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
         header.pack(fill="x", side="top")
         ctk.CTkLabel(
@@ -32,345 +35,223 @@ class ReportesView(ctk.CTkFrame):
         self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
         self.lbl_admin.pack(side="right", padx=10)
 
-        # Contenedor blanco principal
+        # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior: título de filtros + precio vigente
-        top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=20, pady=(15, 5))
+        # Fila 1 de filtros geográficos
+        filtros_geo = ctk.CTkFrame(main_frame, fg_color="transparent")
+        filtros_geo.pack(fill="x", padx=20, pady=(15, 5))
 
-        ctk.CTkLabel(
-            top_bar,
-            text="Filtros rápidos",
-            font=("Arial", 14, "bold"),
-            text_color="#7F8C8D"
-        ).pack(side="left")
-
-        self.lbl_precio = ctk.CTkLabel(
-            top_bar,
-            text="Precio por litro: $0.00",
-            font=("Arial", 14, "bold"),
-            text_color="#214328"
+        self.var_estado = ctk.StringVar(value="Todos los estados")
+        self.menu_estado = ctk.CTkOptionMenu(
+            filtros_geo, variable=self.var_estado, values=["Todos los estados"],
+            width=165, fg_color="#F8F9FA", text_color="#2C3E50", button_color="#D5DBDB",
+            command=lambda _: self.cargar_datos()
         )
-        self.lbl_precio.pack(side="right")
+        self.menu_estado.pack(side="left", padx=(0, 10))
 
-        # Filtros desplegables conectados a MySQL
-        filtros_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        filtros_frame.pack(fill="x", padx=20)
-
-        estilo_combo = {
-            "width": 165,
-            "fg_color": "#F8F9FA",
-            "text_color": "#2C3E50",
-            "button_color": "#D5DBDB",
-            "button_hover_color": "#BFC9CA"
-        }
-
-        self.combo_estado = ctk.CTkOptionMenu(
-            filtros_frame, values=["Estado: Todos"], command=self._al_cambiar_estado, **estilo_combo
+        self.var_municipio = ctk.StringVar(value="Todos los municipios")
+        self.menu_municipio = ctk.CTkOptionMenu(
+            filtros_geo, variable=self.var_municipio, values=["Todos los municipios"],
+            width=175, fg_color="#F8F9FA", text_color="#2C3E50", button_color="#D5DBDB",
+            command=lambda _: self.cargar_datos()
         )
-        self.combo_estado.pack(side="left", padx=(0, 12))
+        self.menu_municipio.pack(side="left", padx=(0, 10))
 
-        self.combo_ciudad = ctk.CTkOptionMenu(
-            filtros_frame, values=["Ciudad: Todas"], command=self._al_cambiar_ciudad, **estilo_combo
+        self.var_colonia = ctk.StringVar(value="Todas las colonias")
+        self.menu_colonia = ctk.CTkOptionMenu(
+            filtros_geo, variable=self.var_colonia, values=["Todas las colonias"],
+            width=180, fg_color="#F8F9FA", text_color="#2C3E50", button_color="#D5DBDB",
+            command=lambda _: self.cargar_datos()
         )
-        self.combo_ciudad.pack(side="left", padx=(0, 12))
+        self.menu_colonia.pack(side="left", padx=(0, 10))
 
-        self.combo_colonia = ctk.CTkOptionMenu(
-            filtros_frame, values=["Colonia: Todas"], command=self._al_cambiar_colonia, **estilo_combo
-        )
-        self.combo_colonia.pack(side="left", padx=(0, 12))
+        self.entry_calle = ctk.CTkEntry(filtros_geo, placeholder_text="Filtrar por calle...", width=180)
+        self.entry_calle.pack(side="left")
+        self.entry_calle.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        self.combo_calle = ctk.CTkOptionMenu(
-            filtros_frame, values=["Calle: Todas"], command=lambda _: self.cargar_datos(), **estilo_combo
-        )
-        self.combo_calle.pack(side="left", padx=(0, 12))
+        # Fila 2 de fechas y exportación
+        filtros_fecha = ctk.CTkFrame(main_frame, fg_color="transparent")
+        filtros_fecha.pack(fill="x", padx=20, pady=(5, 10))
 
-        self.combo_pago = ctk.CTkOptionMenu(
-            filtros_frame,
-            values=["Pago: Todos", "EFECTIVO", "TARJETA"],
-            command=lambda _: self.cargar_datos(),
-            **estilo_combo
-        )
-        self.combo_pago.pack(side="left")
+        ctk.CTkLabel(filtros_fecha, text="Desde:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
+        self.entry_desde = ctk.CTkEntry(filtros_fecha, placeholder_text="dd/mm/aaaa", width=110)
+        self.entry_desde.pack(side="left", padx=(0, 10))
 
-        # Sección media: Resumen general + Filtro por fechas
-        mid_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        mid_frame.pack(fill="x", padx=20, pady=20)
-
-        resumen_frame = ctk.CTkFrame(mid_frame, fg_color="transparent")
-        resumen_frame.pack(side="left")
-        ctk.CTkLabel(
-            resumen_frame,
-            text="Resumen general de la zona seleccionada",
-            font=("Arial", 12, "bold"),
-            text_color="#7F8C8D"
-        ).pack(anchor="w", pady=(0, 5))
-
-        self.tabla_resumen = ttk.Treeview(
-            resumen_frame, columns=("ingresos", "litros", "pedidos"), show="headings", height=1
-        )
-        self.tabla_resumen.heading("ingresos", text="Total de Ingresos")
-        self.tabla_resumen.heading("litros", text="Total de litros vendidos")
-        self.tabla_resumen.heading("pedidos", text="Total de pedidos")
-        self.tabla_resumen.column("ingresos", width=160, anchor="center")
-        self.tabla_resumen.column("litros", width=170, anchor="center")
-        self.tabla_resumen.column("pedidos", width=140, anchor="center")
-        self.tabla_resumen.pack()
-
-        fecha_frame = ctk.CTkFrame(mid_frame, fg_color="transparent")
-        fecha_frame.pack(side="right", anchor="s")
-        ctk.CTkLabel(
-            fecha_frame, text="Filtro por fecha", font=("Arial", 12, "bold"), text_color="#7F8C8D"
-        ).pack(anchor="w")
-
-        cont_fechas = ctk.CTkFrame(fecha_frame, fg_color="transparent")
-        cont_fechas.pack()
-        ctk.CTkLabel(cont_fechas, text="Desde", font=("Arial", 12, "bold"), text_color="#7F8C8D").pack(side="left", padx=5)
-        self.entry_desde = ctk.CTkEntry(cont_fechas, placeholder_text="dd/mm/aaaa", width=105)
-        self.entry_desde.pack(side="left")
-
-        ctk.CTkLabel(cont_fechas, text="Hasta", font=("Arial", 12, "bold"), text_color="#7F8C8D").pack(side="left", padx=5)
-        self.entry_hasta = ctk.CTkEntry(cont_fechas, placeholder_text="dd/mm/aaaa", width=105)
-        self.entry_hasta.pack(side="left")
+        ctk.CTkLabel(filtros_fecha, text="Hasta:", font=("Arial", 13, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
+        self.entry_hasta = ctk.CTkEntry(filtros_fecha, placeholder_text="dd/mm/aaaa", width=110)
+        self.entry_hasta.pack(side="left", padx=(0, 10))
 
         ctk.CTkButton(
-            cont_fechas, text="🔄", width=35, fg_color="#F5CBA7", text_color="#000", command=self.limpiar_filtros
-        ).pack(side="left", padx=5)
-        ctk.CTkButton(
-            cont_fechas, text="🔍", width=35, fg_color="#ABEBC6", text_color="#000", command=self.cargar_datos
+            filtros_fecha, text="Aplicar", width=85,
+            fg_color="#214328", hover_color="#18321E", font=("Arial", 13, "bold"),
+            command=self.cargar_datos
         ).pack(side="left")
 
-        # Tabla principal desglosada por zona
-        columnas = ("ubicacion", "colonia", "fecha", "pedidos", "litros", "total")
+        ctk.CTkButton(
+            filtros_fecha, text="📥 Exportar CSV", width=130,
+            fg_color="#214328", hover_color="#18321E", font=("Arial", 13, "bold"),
+            command=self.exportar_csv
+        ).pack(side="right")
+
+        # Tarjetas de resumen ejecutivo
+        tarjetas = ctk.CTkFrame(main_frame, fg_color="transparent")
+        tarjetas.pack(fill="x", padx=20, pady=5)
+        tarjetas.grid_columnconfigure((0, 1, 2), weight=1)
+
+        self.lbl_total_ingresos = self._crear_kpi(tarjetas, 0, "Total de Ingresos", "$0.00")
+        self.lbl_total_litros = self._crear_kpi(tarjetas, 1, "Total de litros vendidos", "0.00 L")
+        self.lbl_total_pedidos = self._crear_kpi(tarjetas, 2, "Total de pedidos", "0")
+
+        # Tabla consolidada por zona
+        columnas = ("ubicacion", "colonia", "calle", "pedidos", "litros", "ingresos")
         self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
-        encabezados = [
-            ("ubicacion", "Ubicación", 160),
-            ("colonia", "Colonia", 190),
-            ("fecha", "Última venta", 150),
-            ("pedidos", "Pedidos", 95),
-            ("litros", "Litros", 115),
-            ("total", "Total Ingresos", 140),
-        ]
-        for col, texto, ancho in encabezados:
+        encabezados = ["Estado / Municipio", "Colonia", "Calle", "Pedidos", "Litros vendidos", "Total Ingresos"]
+        anchos = [190, 175, 210, 90, 130, 140]
+        for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
-            self.tabla.column(col, width=ancho, minwidth=80, anchor="center")
-        self.tabla.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+            self.tabla.column(col, anchor="center", width=ancho)
+        self.tabla.pack(fill="both", expand=True, padx=20, pady=15)
 
-    # ------------------------------------------------------------------
-    # Carga dinámica de filtros desde MySQL
-    # ------------------------------------------------------------------
-    def _cargar_opciones_filtros(self):
-        estados = self.controller.db.consultar(
-            "SELECT nombre_entidad_fede FROM entidad_federativa ORDER BY nombre_entidad_fede"
-        )
-        lista_estados = ["Estado: Todos"] + [r["nombre_entidad_fede"] for r in estados]
-        self.combo_estado.configure(values=lista_estados)
-        if self.combo_estado.get() not in lista_estados:
-            self.combo_estado.set("Estado: Todos")
+    def _crear_kpi(self, parent, col, titulo, valor_inicial):
+        box = ctk.CTkFrame(parent, fg_color="#F8F9FA", corner_radius=12, border_width=1, border_color="#D5DBDB")
+        box.grid(row=0, column=col, padx=8, sticky="ew")
+        ctk.CTkLabel(box, text=titulo, font=("Arial", 13, "bold"), text_color="#7F8C8D").pack(pady=(10, 2))
+        lbl = ctk.CTkLabel(box, text=valor_inicial, font=("Arial", 20, "bold"), text_color="#214328")
+        lbl.pack(pady=(0, 10))
+        return lbl
 
-        self._recargar_ciudades()
-        self._recargar_colonias()
-        self._recargar_calles()
+    def _cargar_catalogos(self):
+        estados = self.controller.db.consultar("SELECT DISTINCT nombre_entidad_fede FROM entidad_federativa ORDER BY nombre_entidad_fede")
+        self.menu_estado.configure(values=["Todos los estados"] + [e["nombre_entidad_fede"] for e in estados])
 
-    def _recargar_ciudades(self):
-        estado = self.combo_estado.get()
-        if estado != "Estado: Todos":
-            filas = self.controller.db.consultar(
-                """
-                SELECT m.nombre_municipio
-                FROM municipio m
-                JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
-                WHERE ef.nombre_entidad_fede = %s
-                ORDER BY m.nombre_municipio
-                """,
-                (estado,)
-            )
-        else:
-            filas = self.controller.db.consultar(
-                "SELECT nombre_municipio FROM municipio ORDER BY nombre_municipio"
-            )
-        lista = ["Ciudad: Todas"] + [r["nombre_municipio"] for r in filas]
-        self.combo_ciudad.configure(values=lista)
-        if self.combo_ciudad.get() not in lista:
-            self.combo_ciudad.set("Ciudad: Todas")
+        municipios = self.controller.db.consultar("SELECT DISTINCT nombre_municipio FROM municipio ORDER BY nombre_municipio")
+        self.menu_municipio.configure(values=["Todos los municipios"] + [m["nombre_municipio"] for m in municipios])
 
-    def _recargar_colonias(self):
-        ciudad = self.combo_ciudad.get()
-        if ciudad != "Ciudad: Todas":
-            filas = self.controller.db.consultar(
-                """
-                SELECT col.nombre_colonia
-                FROM colonia col
-                JOIN municipio m ON col.id_municipio = m.id_municipio
-                WHERE m.nombre_municipio = %s
-                ORDER BY col.nombre_colonia
-                """,
-                (ciudad,)
-            )
-        else:
-            filas = self.controller.db.consultar(
-                "SELECT nombre_colonia FROM colonia ORDER BY nombre_colonia"
-            )
-        lista = ["Colonia: Todas"] + [r["nombre_colonia"] for r in filas]
-        self.combo_colonia.configure(values=lista)
-        if self.combo_colonia.get() not in lista:
-            self.combo_colonia.set("Colonia: Todas")
+        colonias = self.controller.db.consultar("SELECT DISTINCT nombre_colonia FROM colonia ORDER BY nombre_colonia")
+        self.menu_colonia.configure(values=["Todas las colonias"] + [c["nombre_colonia"] for c in colonias])
 
-    def _recargar_calles(self):
-        colonia = self.combo_colonia.get()
-        if colonia != "Colonia: Todas":
-            filas = self.controller.db.consultar(
-                """
-                SELECT DISTINCT d.calle
-                FROM direccion d
-                JOIN colonia col ON d.id_colonia = col.id_colonia
-                WHERE col.nombre_colonia = %s
-                ORDER BY d.calle
-                """,
-                (colonia,)
-            )
-        else:
-            filas = self.controller.db.consultar(
-                "SELECT DISTINCT calle FROM direccion ORDER BY calle"
-            )
-        lista = ["Calle: Todas"] + [r["calle"] for r in filas]
-        self.combo_calle.configure(values=lista)
-        if self.combo_calle.get() not in lista:
-            self.combo_calle.set("Calle: Todas")
-
-    def _al_cambiar_estado(self, _):
-        self._recargar_ciudades()
-        self._recargar_colonias()
-        self._recargar_calles()
-        self.cargar_datos()
-
-    def _al_cambiar_ciudad(self, _):
-        self._recargar_colonias()
-        self._recargar_calles()
-        self.cargar_datos()
-
-    def _al_cambiar_colonia(self, _):
-        self._recargar_calles()
-        self.cargar_datos()
-
-    def limpiar_filtros(self):
-        self.combo_estado.set("Estado: Todos")
-        self._recargar_ciudades()
-        self._recargar_colonias()
-        self._recargar_calles()
-        self.combo_pago.set("Pago: Todos")
-        self.entry_desde.delete(0, "end")
-        self.entry_hasta.delete(0, "end")
-        self.cargar_datos()
-
-    # ------------------------------------------------------------------
-    # Consulta principal de ventas agrupadas por zona
-    # ------------------------------------------------------------------
     def cargar_datos(self):
         try:
-            desde = texto_a_fecha(self.entry_desde.get())
-            hasta = texto_a_fecha(self.entry_hasta.get())
+            fecha_desde = texto_a_fecha(self.entry_desde.get())
+            fecha_hasta = texto_a_fecha(self.entry_hasta.get())
         except ValueError:
-            messagebox.showwarning("Fecha inválida", "Escribe las fechas como dd/mm/aaaa, por ejemplo 19/11/2026.")
+            messagebox.showwarning("Fecha inválida", "Usa el formato dd/mm/aaaa en los filtros de fecha.")
             return
-
-        precio = self.controller.db.obtener_precio_vigente()
-        self.lbl_precio.configure(
-            text=f"Precio por litro: ${float(precio):.2f}" if precio is not None else "Precio por litro: sin definir"
-        )
 
         for item in self.tabla.get_children():
             self.tabla.delete(item)
-        for item in self.tabla_resumen.get_children():
-            self.tabla_resumen.delete(item)
+        self._filas_reporte.clear()
 
-        sucursal = self.controller.id_sucursal_actual
-        query = """
+        condiciones = ["p.estado_pedido = 'ENTREGADO'"]
+        params = []
+
+        if self.controller.id_sucursal_actual:
+            condiciones.append("p.id_sucursal = %s")
+            params.append(self.controller.id_sucursal_actual)
+
+        if self.var_estado.get() != "Todos los estados":
+            condiciones.append("ef.nombre_entidad_fede = %s")
+            params.append(self.var_estado.get())
+
+        if self.var_municipio.get() != "Todos los municipios":
+            condiciones.append("m.nombre_municipio = %s")
+            params.append(self.var_municipio.get())
+
+        if self.var_colonia.get() != "Todas las colonias":
+            condiciones.append("c.nombre_colonia = %s")
+            params.append(self.var_colonia.get())
+
+        calle = self.entry_calle.get().strip()
+        if calle:
+            condiciones.append("dir.calle LIKE %s")
+            params.append(f"%{calle}%")
+
+        if fecha_desde:
+            condiciones.append("DATE(p.fecha_entrega_real) >= %s")
+            params.append(fecha_desde)
+
+        if fecha_hasta:
+            condiciones.append("DATE(p.fecha_entrega_real) <= %s")
+            params.append(fecha_hasta)
+
+        where_sql = " AND ".join(condiciones)
+
+        query = f"""
             SELECT
-                m.nombre_municipio AS municipio,
-                col.nombre_colonia AS colonia,
+                ef.nombre_entidad_fede,
+                m.nombre_municipio,
+                c.nombre_colonia,
+                dir.calle,
                 COUNT(DISTINCT p.id_pedido) AS pedidos,
-                SUM(CASE WHEN prod.tipo_producto = 'GAS_ESTACIONARIO' THEN p.cantidad_litros ELSE 0 END) AS litros,
-                SUM(p.total_pedido) AS total,
-                MAX(COALESCE(p.fecha_entrega_real, p.fecha_registro)) AS ultima_venta
+                COALESCE(SUM(CASE WHEN pro.tipo_producto = 'GAS_ESTACIONARIO' THEN d.cantidad ELSE 0 END), 0) AS litros,
+                COALESCE(SUM(d.cantidad * pr.precio_producto), 0) AS ingresos
             FROM pedido p
-            INNER JOIN direccion d ON p.id_direccion_entrega = d.id_direccion
-            INNER JOIN colonia col ON d.id_colonia = col.id_colonia
-            INNER JOIN municipio m ON col.id_municipio = m.id_municipio
-            INNER JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
-            INNER JOIN producto prod ON p.id_producto = prod.id_producto
-            WHERE p.estado_pedido = 'ENTREGADO'
-              AND (%s IS NULL OR p.id_sucursal = %s)
+            JOIN detalle_pedido d      ON d.id_pedido = p.id_pedido
+            JOIN producto pro          ON pro.id_producto = d.id_producto
+            JOIN precio_producto pr    ON pr.id_precio = d.id_precio
+            JOIN direccion dir         ON dir.id_direccion = p.id_direccion_entrega
+            JOIN colonia c             ON c.id_colonia = dir.id_colonia
+            JOIN municipio m           ON m.id_municipio = c.id_municipio
+            JOIN entidad_federativa ef ON ef.id_entidad_fede = m.id_entidad_fede
+            WHERE {where_sql}
+            GROUP BY ef.nombre_entidad_fede, m.nombre_municipio, c.nombre_colonia, dir.calle
+            ORDER BY ingresos DESC
         """
-        params = [sucursal, sucursal]
+        filas = self.controller.db.consultar(query, tuple(params))
 
-        estado = self.combo_estado.get()
-        if estado != "Estado: Todos":
-            query += " AND ef.nombre_entidad_fede = %s"
-            params.append(estado)
+        suma_ingresos = 0.0
+        suma_litros = 0.0
+        suma_pedidos = 0
 
-        ciudad = self.combo_ciudad.get()
-        if ciudad != "Ciudad: Todas":
-            query += " AND m.nombre_municipio = %s"
-            params.append(ciudad)
+        for f in filas:
+            ing = float(f["ingresos"])
+            lit = float(f["litros"])
+            ped = int(f["pedidos"])
+            suma_ingresos += ing
+            suma_litros += lit
+            suma_pedidos += ped
 
-        colonia = self.combo_colonia.get()
-        if colonia != "Colonia: Todas":
-            query += " AND col.nombre_colonia = %s"
-            params.append(colonia)
+            fila_formateada = (
+                f"{f['nombre_entidad_fede']} / {f['nombre_municipio']}",
+                f["nombre_colonia"],
+                f["calle"],
+                ped,
+                f"{lit:,.2f} L",
+                f"${ing:,.2f}",
+            )
+            self._filas_reporte.append(fila_formateada)
+            self.tabla.insert("", "end", values=fila_formateada)
 
-        calle = self.combo_calle.get()
-        if calle != "Calle: Todas":
-            query += " AND d.calle = %s"
-            params.append(calle)
+        self.lbl_total_ingresos.configure(text=f"${suma_ingresos:,.2f}")
+        self.lbl_total_litros.configure(text=f"{suma_litros:,.2f} L")
+        self.lbl_total_pedidos.configure(text=str(suma_pedidos))
 
-        pago = self.combo_pago.get()
-        if pago != "Pago: Todos":
-            query += " AND p.metodo_pago = %s"
-            params.append(pago)
+    def exportar_csv(self):
+        if not self._filas_reporte:
+            messagebox.showinfo("Sin datos", "No hay registros en la tabla para exportar.")
+            return
 
-        if desde:
-            query += " AND DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) >= %s"
-            params.append(desde)
-        if hasta:
-            query += " AND DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) <= %s"
-            params.append(hasta)
-
-        query += " GROUP BY m.nombre_municipio, col.nombre_colonia ORDER BY total DESC"
-
-        total_ingresos = 0.0
-        total_litros = 0.0
-        total_pedidos = 0
-
-        for fila in self.controller.db.consultar(query, params):
-            ingresos_fila = float(fila["total"] or 0)
-            litros_fila = float(fila["litros"] or 0)
-            pedidos_fila = int(fila["pedidos"] or 0)
-
-            self.tabla.insert("", "end", values=(
-                fila["municipio"],
-                fila["colonia"],
-                formatear_fecha(fila["ultima_venta"]),
-                pedidos_fila,
-                f"{litros_fila:.2f} L",
-                f"${ingresos_fila:,.2f}"
-            ))
-
-            total_ingresos += ingresos_fila
-            total_litros += litros_fila
-            total_pedidos += pedidos_fila
-
-        self.tabla_resumen.insert(
-            "",
-            "end",
-            values=(f"${total_ingresos:,.2f}", f"{total_litros:.2f} L", total_pedidos)
+        ruta = filedialog.asksaveasfilename(
+            title="Guardar reporte por zona",
+            initialfile=f"reporte_zonas_alfagas_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+            defaultextension=".csv",
+            filetypes=[("Archivo CSV (Excel)", "*.csv")]
         )
+        if not ruta:
+            return
+
+        with open(ruta, "w", newline="", encoding="utf-8-sig") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Estado / Municipio", "Colonia", "Calle", "Pedidos", "Litros vendidos", "Total Ingresos"])
+            writer.writerows(self._filas_reporte)
+
+        messagebox.showinfo("Reporte exportado", f"Archivo guardado en:\n{ruta}")
 
     def tkraise(self, *args, **kwargs):
         super().tkraise(*args, **kwargs)
         if self.controller.admin_actual:
             self.lbl_admin.configure(text=f"👤 {self.controller.admin_actual}")
-        self._cargar_opciones_filtros()
+        self._cargar_catalogos()
         self.cargar_datos()
