@@ -380,15 +380,17 @@ class ReportesView(ctk.CTkFrame):
                 m.nombre_municipio AS municipio,
                 col.nombre_colonia AS colonia,
                 COUNT(DISTINCT p.id_pedido) AS pedidos,
-                SUM(CASE WHEN prod.tipo_producto = 'GAS_ESTACIONARIO' THEN p.cantidad_litros ELSE 0 END) AS litros,
-                SUM(p.total_pedido) AS total,
+                COALESCE(SUM(CASE WHEN prod.tipo_producto = 'GAS_ESTACIONARIO' THEN dp.cantidad_litros ELSE 0 END), 0) AS litros,
+                COALESCE(SUM(COALESCE(dp.subtotal, dp.cantidad_litros * COALESCE(dp.precio_unitario, pp.precio_producto))), 0) AS total,
                 MAX(COALESCE(p.fecha_entrega_real, p.fecha_registro)) AS ultima_venta
             FROM pedido p
             INNER JOIN direccion d ON p.id_direccion_entrega = d.id_direccion
             INNER JOIN colonia col ON d.id_colonia = col.id_colonia
             INNER JOIN municipio m ON col.id_municipio = m.id_municipio
             INNER JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
-            INNER JOIN producto prod ON p.id_producto = prod.id_producto
+            INNER JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
+            INNER JOIN producto prod ON dp.id_producto = prod.id_producto
+            LEFT JOIN precio_producto pp ON dp.id_precio = pp.id_precio
             WHERE p.estado_pedido = 'ENTREGADO'
               AND (%s IS NULL OR p.id_sucursal = %s)
         """

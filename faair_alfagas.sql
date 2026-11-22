@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 20-11-2026 a las 19:04:18
+-- Tiempo de generación: 22-11-2026 a las 22:08:53
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -43,7 +43,7 @@ CREATE TABLE `administrador` (
 --
 
 INSERT INTO `administrador` (`id_adm`, `id_sucursal`, `nombre_adm`, `correo_adm`, `numero_adm`, `nombre_usuario_adm`, `password`, `activo_adm`) VALUES
-(1, NULL, 'Administrador General', 'admin@alfagas.com', '4491234567', 'admin', '1236', 1);
+(1, NULL, 'Administrador General', 'admin@alfagas.com', '4491234567', 'admin', '$2b$12$q8RKvmbX5y.anT0RUDQcyOQL1tTt.zUErxWkcSFm.xKIYEIQ5Tec.', 1);
 
 -- --------------------------------------------------------
 
@@ -346,7 +346,8 @@ CREATE TABLE `precio_producto` (
 --
 
 INSERT INTO `precio_producto` (`id_precio`, `id_producto`, `precio_producto`, `fecha_inicio`, `fecha_fin`, `id_adm`, `fecha_creacion_productos`) VALUES
-(1, 1, 10.50, '2026-11-18', NULL, 1, '2026-11-18 21:19:22');
+(1, 1, 10.50, '2026-11-18', '2026-11-21', 1, '2026-11-18 21:19:22'),
+(2, 1, 11.67, '2026-11-22', NULL, 1, '2026-11-22 14:09:42');
 
 -- --------------------------------------------------------
 
@@ -546,13 +547,13 @@ ALTER TABLE `administrador`
 -- AUTO_INCREMENT de la tabla `cliente`
 --
 ALTER TABLE `cliente`
-  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT de la tabla `colonia`
 --
 ALTER TABLE `colonia`
-  MODIFY `id_colonia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_colonia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_pedido`
@@ -564,19 +565,19 @@ ALTER TABLE `detalle_pedido`
 -- AUTO_INCREMENT de la tabla `direccion`
 --
 ALTER TABLE `direccion`
-  MODIFY `id_direccion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_direccion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `entidad_federativa`
 --
 ALTER TABLE `entidad_federativa`
-  MODIFY `id_entidad_fede` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_entidad_fede` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `municipio`
 --
 ALTER TABLE `municipio`
-  MODIFY `id_municipio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_municipio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `notificacion`
@@ -588,19 +589,19 @@ ALTER TABLE `notificacion`
 -- AUTO_INCREMENT de la tabla `pedido`
 --
 ALTER TABLE `pedido`
-  MODIFY `id_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT de la tabla `precio_producto`
 --
 ALTER TABLE `precio_producto`
-  MODIFY `id_precio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_precio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `prediccion`
 --
 ALTER TABLE `prediccion`
-  MODIFY `id_prediccion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_prediccion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `producto`

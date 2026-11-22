@@ -138,14 +138,14 @@ class PedidosView(ctk.CTkFrame):
             SELECT
                 p.id_pedido,
                 p.folio,
-                DATE_FORMAT(p.fecha_registro, '%%d/%%m/%%Y %%H:%%i') AS fecha_fmt,
+                DATE_FORMAT(p.fecha_registro, '%d/%m/%Y %H:%i') AS fecha_fmt,
                 c.nombre_cliente,
                 d.calle, d.num_exterior, d.num_interior,
                 col.nombre_colonia, col.codigo_postal,
                 m.nombre_municipio, ef.nombre_entidad_fede,
-                COALESCE(SUM(dp.cantidad), 0) AS cantidad_total,
+                COALESCE(SUM(dp.cantidad_litros), 0) AS cantidad_total,
                 MAX(pr.tipo_producto) AS tipo_producto,
-                COALESCE(SUM(dp.cantidad * pp.precio_producto), 0) AS monto_total,
+                COALESCE(SUM(COALESCE(dp.subtotal, dp.cantidad_litros * COALESCE(dp.precio_unitario, pp.precio_producto))), 0) AS monto_total,
                 p.origen_pedido,
                 p.estado_pedido
             FROM pedido p
@@ -156,7 +156,7 @@ class PedidosView(ctk.CTkFrame):
             INNER JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
             INNER JOIN detalle_pedido dp ON p.id_pedido = dp.id_pedido
             INNER JOIN producto pr ON dp.id_producto = pr.id_producto
-            INNER JOIN precio_producto pp ON dp.id_precio = pp.id_precio
+            LEFT JOIN precio_producto pp ON dp.id_precio = pp.id_precio
             WHERE (%s IS NULL OR p.id_sucursal = %s)
         """
         params = [sucursal, sucursal]

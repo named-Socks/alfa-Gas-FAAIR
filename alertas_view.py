@@ -1,6 +1,6 @@
 from datetime import date
 import customtkinter as ctk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 from database import formatear_fecha, armar_direccion
 
 
@@ -39,7 +39,7 @@ class AlertasView(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior de filtros y botón de acción
+        # Barra superior de filtros
         barra = ctk.CTkFrame(main_frame, fg_color="transparent")
         barra.pack(fill="x", padx=20, pady=(18, 8))
 
@@ -58,18 +58,6 @@ class AlertasView(ctk.CTkFrame):
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         ).pack(side="left")
-
-        ctk.CTkButton(
-            barra,
-            text="📲 Registrar envío de recordatorio",
-            fg_color="#214328",
-            hover_color="#18321E",
-            text_color="#FFFFFF",
-            font=("Arial", 15, "bold"),
-            height=40,
-            corner_radius=10,
-            command=self.enviar_recordatorio_seleccionado
-        ).pack(side="right")
 
         # Contenedor de tabla con barras de desplazamiento
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
@@ -181,34 +169,6 @@ class AlertasView(ctk.CTkFrame):
                     f["estado_notif"] or "SIN_ENVIAR",
                 ),
             )
-
-    def enviar_recordatorio_seleccionado(self):
-        seleccion = self.tabla.selection()
-        if not seleccion:
-            messagebox.showwarning("Selecciona un cliente", "Elige una fila de la tabla para registrar el recordatorio.")
-            return
-
-        id_pred = seleccion[0]
-        datos = self._predicciones_cache.get(id_pred)
-        if not datos:
-            return
-
-        query = """
-            INSERT INTO notificacion (
-                id_cliente, id_prediccion, id_pedido, tipo_notificacion,
-                numero_intento, estado_envio, resultado_notificacion
-            )
-            VALUES (%s, %s, NULL, 'RECORDATORIO', 1, 'ENVIADO', 'SIN_RESPUESTA')
-        """
-        nuevo_id = self.controller.db.ejecutar(query, (datos["id_cliente"], datos["id_prediccion"]))
-        if nuevo_id:
-            self.cargar_datos()
-            messagebox.showinfo(
-                "Recordatorio registrado",
-                f"Se registró el envío de recordatorio por WhatsApp para {datos['nombre_cliente']}."
-            )
-        else:
-            messagebox.showerror("Error", "No se pudo registrar la notificación en MySQL.")
 
     def tkraise(self, *args, **kwargs):
         super().tkraise(*args, **kwargs)

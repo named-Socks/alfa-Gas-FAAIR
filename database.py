@@ -27,11 +27,29 @@ def texto_a_fecha(texto):
     return datetime.strptime(texto, "%d/%m/%Y").strftime("%Y-%m-%d")
 
 
-def armar_direccion(calle, num_exterior, colonia):
+def armar_direccion(calle_o_fila, num_exterior=None, colonia=None, num_interior=None):
     """Une calle, número y colonia en un solo texto para mostrar en las tablas."""
+    if isinstance(calle_o_fila, dict):
+        calle = calle_o_fila.get("calle")
+        num_ext = calle_o_fila.get("num_exterior")
+        num_int = calle_o_fila.get("num_interior")
+        col = calle_o_fila.get("nombre_colonia")
+    else:
+        calle = calle_o_fila
+        num_ext = num_exterior
+        num_int = num_interior
+        col = colonia
+
     if not calle:
         return "Sin dirección"
-    return f"{calle} #{num_exterior}, Col. {colonia}"
+
+    numero = f"#{num_ext}" if num_ext else ""
+    if num_int:
+        numero = f"{numero} Int. {num_int}".strip()
+
+    partes = [p for p in (calle, numero) if p]
+    base = " ".join(partes)
+    return f"{base}, Col. {col}" if col else base
 
 
 # ----------------------------------------------------------------------
