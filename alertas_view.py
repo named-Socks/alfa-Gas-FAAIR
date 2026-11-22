@@ -2,6 +2,7 @@ from datetime import date
 import customtkinter as ctk
 from tkinter import ttk
 from database import formatear_fecha, armar_direccion
+from PIL import Image
 
 
 class AlertasView(ctk.CTkFrame):
@@ -13,9 +14,15 @@ class AlertasView(ctk.CTkFrame):
         # Barra superior
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text="🔥 ALFA GAS      Alertas de predicción",
+            image=self.icono_alfa,
+            text="   Alertas de predicción",
+            compound="left",
             font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
         ).pack(side="left", padx=35, pady=22)
@@ -39,27 +46,33 @@ class AlertasView(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior de filtros
+        # Barra superior de filtros (letra agrandada)
         barra = ctk.CTkFrame(main_frame, fg_color="transparent")
-        barra.pack(fill="x", padx=20, pady=(18, 8))
+        barra.pack(fill="x", padx=20, pady=(20, 10))
 
-        ctk.CTkLabel(barra, text="Urgencia:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(
+            barra,
+            text="Urgencia:",
+            font=("Arial", 17, "bold"),
+            text_color="#2C3E50"
+        ).pack(side="left", padx=(0, 12))
+
         self.var_urgencia = ctk.StringVar(value="Todas")
         ctk.CTkOptionMenu(
             barra,
             variable=self.var_urgencia,
             values=["Todas", "Crítica / Vencida", "Hoy", "Próximos 3 días", "En tiempo"],
-            width=205,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
+            width=235,
+            height=44,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         ).pack(side="left")
 
-        # Contenedor de tabla con barras de desplazamiento
+        # Contenedor de tabla con barras de desplazamiento (tamaño de tabla sin cambios)
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
 

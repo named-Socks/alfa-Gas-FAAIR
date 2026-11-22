@@ -1,5 +1,6 @@
 from datetime import datetime
 import customtkinter as ctk
+from PIL import Image
 from tkinter import filedialog, messagebox
 
 
@@ -17,7 +18,7 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         self.configure(fg_color="#F4F6F7")
         self.transient(parent.winfo_toplevel())
 
-        # Encabezado verde institucional
+        # Encabezado verde institucional de la ventana emergente
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=68)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
@@ -41,7 +42,7 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         ctk.CTkLabel(
             card,
             text=f"Cuenta: {texto_cuenta}",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#214328"
         ).pack(anchor="w", padx=24, pady=(18, 10))
 
@@ -74,7 +75,7 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
             border_width=1,
             border_color="#BDC3C7",
             hover_color="#E9ECEF",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             corner_radius=8,
             command=self.destroy
         ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
@@ -86,7 +87,7 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
             fg_color="#214328",
             text_color="#FFFFFF",
             hover_color="#18321E",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             corner_radius=8,
             command=self.guardar
         ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
@@ -97,7 +98,7 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         ctk.CTkLabel(
             parent,
             text=etiqueta,
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", padx=24, pady=(10, 4))
 
@@ -107,7 +108,7 @@ class ModalCambiarContrasena(ctk.CTkToplevel):
         entry = ctk.CTkEntry(
             fila,
             height=42,
-            font=("Arial", 15),
+            font=("Arial", 16),
             corner_radius=8,
             border_color="#BDC3C7",
             show="•"
@@ -185,9 +186,15 @@ class AjustesView(ctk.CTkFrame):
         # Barra superior verde
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text="🔥 ALFA GAS      Configuración y ajustes",
+            image=self.icono_alfa,
+            text="   Configuración y ajustes",
+            compound="left",
             font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
         ).pack(side="left", padx=35, pady=22)
@@ -225,7 +232,7 @@ class AjustesView(ctk.CTkFrame):
         self.lbl_precio_actual = ctk.CTkLabel(
             card_precio,
             text="Precio actual por litro de gas\n$00.00",
-            font=("Arial", 16),
+            font=("Arial", 17),
             text_color="#2C3E50",
             justify="center"
         )
@@ -236,15 +243,15 @@ class AjustesView(ctk.CTkFrame):
         ctk.CTkLabel(
             fila_nuevo_precio,
             text="Nuevo precio: $",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(side="left")
         self.entry_nuevo_precio = ctk.CTkEntry(
             fila_nuevo_precio,
             placeholder_text="00.00",
-            width=95,
-            height=38,
-            font=("Arial", 15),
+            width=100,
+            height=40,
+            font=("Arial", 16),
             justify="center"
         )
         self.entry_nuevo_precio.pack(side="left")
@@ -272,7 +279,7 @@ class AjustesView(ctk.CTkFrame):
         ctk.CTkLabel(
             card_wa,
             text="Número:\n+52 449 000 00 00\n\nApi key:\n[**********] 👁️",
-            font=("Arial", 16),
+            font=("Arial", 17),
             text_color="#2C3E50",
             justify="center"
         ).pack(pady=(35, 10))
@@ -285,7 +292,7 @@ class AjustesView(ctk.CTkFrame):
         self.lbl_usuario_seg = ctk.CTkLabel(
             card_seg,
             text="Usuario:\nadmin\n\nContraseña:\n••••••••••",
-            font=("Arial", 16),
+            font=("Arial", 17),
             text_color="#2C3E50",
             justify="center",
             wraplength=240
@@ -314,7 +321,7 @@ class AjustesView(ctk.CTkFrame):
         self.lbl_ultimo_respaldo = ctk.CTkLabel(
             card_bd,
             text="Último respaldo:\n00/00/0000",
-            font=("Arial", 16),
+            font=("Arial", 17),
             text_color="#2C3E50",
             justify="center",
             wraplength=240
@@ -353,7 +360,7 @@ class AjustesView(ctk.CTkFrame):
         ctk.CTkLabel(
             card_header,
             text=titulo,
-            font=("Arial", 17, "bold"),
+            font=("Arial", 18, "bold"),
             text_color="#FFFFFF"
         ).pack(expand=True)
 

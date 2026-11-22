@@ -1,3 +1,4 @@
+from PIL import Image
 import customtkinter as ctk
 
 
@@ -9,9 +10,15 @@ class LoginView(ctk.CTkFrame):
         # Navbar
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text="🔥 ALFA GAS      Inicio de sesión",
+            image=self.icono_alfa,
+            text="   Inicio de sesión",
+            compound="left",
             font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
         ).pack(side="left", padx=35, pady=22)

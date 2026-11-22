@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
+from PIL import Image
 from database import formatear_fecha, armar_direccion
 
 
@@ -20,17 +21,21 @@ class ModalEditarCliente(ctk.CTkToplevel):
         self.transient(parent.winfo_toplevel())
         self.bind("<Escape>", lambda _: self.destroy())
 
-        # Encabezado verde institucional
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=68)
+       # Barra superior
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
-        header.pack_propagate(False)
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text=f"✏️  Editar cliente  #{datos_cliente['id_cliente']}",
-            font=("Arial", 20, "bold"),
+            image=self.icono_alfa,
+            text="   Clientes y predicciones",
+            compound="left",
+            font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=24)
-
+        ).pack(side="left", padx=35, pady=22)
         # Contenedor blanco principal
         card = ctk.CTkFrame(
             self,
@@ -45,13 +50,13 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             card,
             text="Nombre del cliente",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", padx=24, pady=(18, 4))
         self.entry_nombre = ctk.CTkEntry(
             card,
-            height=40,
-            font=("Arial", 15),
+            height=42,
+            font=("Arial", 16),
             corner_radius=8,
             border_color="#BDC3C7"
         )
@@ -68,13 +73,13 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             col_tel,
             text="Teléfono WhatsApp",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", pady=(0, 4))
         self.entry_telefono = ctk.CTkEntry(
             col_tel,
-            height=40,
-            font=("Arial", 15),
+            height=42,
+            font=("Arial", 16),
             corner_radius=8,
             border_color="#BDC3C7"
         )
@@ -86,7 +91,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             col_est,
             text="Estatus del cliente",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", pady=(0, 4))
         estatus_actual = datos_cliente.get("estado_cliente") or "ACTIVO"
@@ -95,9 +100,9 @@ class ModalEditarCliente(ctk.CTkToplevel):
             col_est,
             variable=self.var_estatus,
             values=["ACTIVO", "PENDIENTE_REGISTRO", "INACTIVO", "BAJA"],
-            height=40,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
+            height=42,
+            font=("Arial", 15),
+            dropdown_font=("Arial", 15),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB"
@@ -111,7 +116,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             card,
             text="Dirección vigente de entrega",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 17, "bold"),
             text_color="#214328"
         ).pack(anchor="w", padx=24, pady=(0, 8))
 
@@ -119,7 +124,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             card,
             text="Colonia",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", padx=24, pady=(2, 4))
 
@@ -133,9 +138,9 @@ class ModalEditarCliente(ctk.CTkToplevel):
             card,
             variable=self.var_colonia,
             values=opciones_colonia,
-            height=40,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
+            height=42,
+            font=("Arial", 15),
+            dropdown_font=("Arial", 15),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB"
@@ -153,13 +158,13 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             col_calle,
             text="Calle",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", pady=(0, 4))
         self.entry_calle = ctk.CTkEntry(
             col_calle,
-            height=40,
-            font=("Arial", 15),
+            height=42,
+            font=("Arial", 16),
             corner_radius=8,
             border_color="#BDC3C7"
         )
@@ -171,13 +176,13 @@ class ModalEditarCliente(ctk.CTkToplevel):
         ctk.CTkLabel(
             col_num,
             text="Núm. ext.",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", pady=(0, 4))
         self.entry_num = ctk.CTkEntry(
             col_num,
-            height=40,
-            font=("Arial", 15),
+            height=42,
+            font=("Arial", 16),
             corner_radius=8,
             border_color="#BDC3C7"
         )
@@ -210,7 +215,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             border_width=1,
             border_color="#BDC3C7",
             hover_color="#E9ECEF",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             corner_radius=8,
             command=self.destroy
         ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
@@ -222,7 +227,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             fg_color="#214328",
             text_color="#FFFFFF",
             hover_color="#18321E",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 16, "bold"),
             corner_radius=8,
             command=self.guardar
         ).grid(row=0, column=1, padx=(6, 0), sticky="ew")
@@ -333,12 +338,18 @@ class ClientesView(ctk.CTkFrame):
         self._colonias_map = {}
         self._modal_editar = None
 
-        # Barra superior
+       # Barra superior
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text="🔥 ALFA GAS      Clientes y predicciones",
+            image=self.icono_alfa,
+            text="   Clientes y predicciones",
+            compound="left",
             font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
         ).pack(side="left", padx=35, pady=22)
@@ -362,56 +373,61 @@ class ClientesView(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior de filtros y búsqueda
+        # Barra superior de filtros y búsqueda (letra agrandada)
         top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=20, pady=(18, 8))
+        top_bar.pack(fill="x", padx=20, pady=(20, 10))
 
-        ctk.CTkLabel(top_bar, text="Filtros:", font=("Arial", 15, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(
+            top_bar,
+            text="Filtros:",
+            font=("Arial", 17, "bold"),
+            text_color="#2C3E50"
+        ).pack(side="left", padx=(0, 12))
 
         self.var_estado_cli = ctk.StringVar(value="Todos")
         self.menu_estado = ctk.CTkOptionMenu(
             top_bar,
             variable=self.var_estado_cli,
             values=["Todos", "ACTIVO", "PENDIENTE_REGISTRO", "INACTIVO", "BAJA"],
-            width=205,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
+            width=230,
+            height=44,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.menu_estado.pack(side="left", padx=(0, 12))
+        self.menu_estado.pack(side="left", padx=(0, 14))
 
         self.var_colonia = ctk.StringVar(value="Todas las colonias")
         self.menu_colonia = ctk.CTkOptionMenu(
             top_bar,
             variable=self.var_colonia,
             values=["Todas las colonias"],
-            width=220,
-            height=38,
-            font=("Arial", 14),
-            dropdown_font=("Arial", 14),
+            width=245,
+            height=44,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
             fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.menu_colonia.pack(side="left", padx=(0, 12))
+        self.menu_colonia.pack(side="left", padx=(0, 14))
 
         self.entry_buscar = ctk.CTkEntry(
             top_bar,
             placeholder_text="🔍 Buscar por nombre o teléfono...",
-            width=310,
-            height=38,
-            font=("Arial", 14),
-            corner_radius=20
+            width=330,
+            height=44,
+            font=("Arial", 16),
+            corner_radius=22
         )
         self.entry_buscar.pack(side="right")
         self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        # Contenedor de tabla con barras de desplazamiento
+        # Contenedor de tabla con barras de desplazamiento (tamaño de tabla sin cambios)
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
 

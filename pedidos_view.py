@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 from database import armar_direccion
+from PIL import Image
 
 
 class PedidosView(ctk.CTkFrame):
@@ -9,15 +10,21 @@ class PedidosView(ctk.CTkFrame):
         self.controller = controller
         self.pedidos_map = {}
 
-        # Navbar
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=80)
+        # Navbar unificado
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text="🔥 ALFA GAS      Pedidos",
-            font=("Arial", 24, "bold"),
+            image=self.icono_alfa,
+            text="   Pedidos",
+            compound="left",
+            font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=30, pady=20)
+        ).pack(side="left", padx=35, pady=22)
 
         ctk.CTkButton(
             header,
@@ -25,77 +32,95 @@ class PedidosView(ctk.CTkFrame):
             fg_color="#F8F9FA",
             text_color="#214328",
             hover_color="#E2E6EA",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
+            height=42,
             corner_radius=20,
             command=lambda: self.controller.mostrar_pantalla("menu")
-        ).pack(side="right", padx=30)
+        ).pack(side="right", padx=35)
 
-        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 14), text_color="#FFFFFF")
-        self.lbl_admin.pack(side="right", padx=10)
+        self.lbl_admin = ctk.CTkLabel(header, text="", font=("Arial", 16, "bold"), text_color="#FFFFFF")
+        self.lbl_admin.pack(side="right", padx=12)
 
         self.lbl_precio = ctk.CTkLabel(
             self,
             text="Precio por litro: $00.00",
-            font=("Arial", 14, "bold"),
-            text_color="#7F8C8D"
+            font=("Arial", 17, "bold"),
+            text_color="#214328"
         )
-        self.lbl_precio.place(relx=0.5, rely=0.07, anchor="center")
+        self.lbl_precio.pack(pady=(12, 0))
 
         # Contenedor principal
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=(30, 20))
+        main_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
 
+        # Barra de filtros (letra agrandada)
         top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=20, pady=(15, 5))
+        top_bar.pack(fill="x", padx=20, pady=(18, 8))
 
-        ctk.CTkLabel(top_bar, text="Filtros rápidos:", font=("Arial", 14, "bold"), text_color="#7F8C8D").pack(side="left")
+        ctk.CTkLabel(
+            top_bar,
+            text="Filtros rápidos:",
+            font=("Arial", 17, "bold"),
+            text_color="#2C3E50"
+        ).pack(side="left")
 
         self.combo_estado = ctk.CTkOptionMenu(
             top_bar,
             values=["Todos los estados", "REGISTRADO", "ENTREGADO", "CANCELADO", "FALLIDO"],
-            width=165,
-            fg_color="#FFFFFF",
+            width=215,
+            height=44,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
+            fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.combo_estado.pack(side="left", padx=10)
+        self.combo_estado.pack(side="left", padx=12)
 
         self.combo_origen = ctk.CTkOptionMenu(
             top_bar,
             values=["Todos los orígenes", "WHATSAPP", "ADMIN"],
-            width=165,
-            fg_color="#FFFFFF",
+            width=215,
+            height=44,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
+            fg_color="#F8F9FA",
             text_color="#2C3E50",
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.combo_origen.pack(side="left", padx=10)
+        self.combo_origen.pack(side="left", padx=8)
 
         self.entry_busqueda = ctk.CTkEntry(
             top_bar,
             placeholder_text="🔍 Buscar por cliente o folio",
-            width=260,
-            corner_radius=20
+            width=300,
+            height=44,
+            font=("Arial", 16),
+            corner_radius=22
         )
         self.entry_busqueda.pack(side="right")
         self.entry_busqueda.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        # Barra de cambio de estatus
+        # Barra de cambio de estatus (letra agrandada)
         accion_bar = ctk.CTkFrame(main_frame, fg_color="#F8F9FA", corner_radius=10)
         accion_bar.pack(fill="x", padx=20, pady=10)
 
         ctk.CTkLabel(
             accion_bar,
             text="Selecciona un pedido y cambia su estatus:",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#2C3E50"
-        ).pack(side="left", padx=15, pady=10)
+        ).pack(side="left", padx=16, pady=12)
 
         self.combo_nuevo_estado = ctk.CTkOptionMenu(
             accion_bar,
             values=["ENTREGADO", "REGISTRADO", "CANCELADO", "FALLIDO"],
-            width=150,
+            width=185,
+            height=42,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
             fg_color="#FFFFFF",
             text_color="#2C3E50",
             button_color="#D5DBDB"
@@ -107,11 +132,13 @@ class PedidosView(ctk.CTkFrame):
             text="Actualizar estatus ✔",
             fg_color="#214328",
             hover_color="#18321E",
-            font=("Arial", 13, "bold"),
+            font=("Arial", 16, "bold"),
+            height=42,
+            corner_radius=10,
             command=self.cambiar_estatus_pedido
         ).pack(side="left", padx=10)
 
-        # Tabla
+        # Tabla (tamaño de letra sin cambios)
         columnas = ("folio", "fecha", "cliente", "dir", "litros", "monto", "origen", "estatus")
         self.tabla = ttk.Treeview(main_frame, columns=columnas, show="headings")
         encabezados = ["Folio", "Fecha / Hora", "Cliente", "Dirección de entrega", "Cantidad", "Monto total", "Origen", "Estatus"]

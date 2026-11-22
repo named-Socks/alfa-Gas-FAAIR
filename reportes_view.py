@@ -3,6 +3,7 @@ from datetime import datetime
 import customtkinter as ctk
 from tkinter import ttk, filedialog, messagebox
 from database import formatear_fecha, texto_a_fecha, SelectorFecha
+from PIL import Image
 
 
 class ReportesView(ctk.CTkFrame):
@@ -13,9 +14,15 @@ class ReportesView(ctk.CTkFrame):
         # Encabezado principal
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
+
+        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
+        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
+
         ctk.CTkLabel(
             header,
-            text="🔥 ALFA GAS      Reportes de ventas por zona",
+            image=self.icono_alfa,
+            text="   Reportes de ventas por zona",
+            compound="left",
             font=("Arial", 28, "bold"),
             text_color="#FFFFFF"
         ).pack(side="left", padx=35, pady=22)
@@ -39,15 +46,15 @@ class ReportesView(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior dentro de la tarjeta: título de filtros + precio vigente + exportar
+        # Barra superior dentro de la tarjeta: título de filtros + precio vigente + exportar (letra agrandada)
         top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=20, pady=(15, 6))
+        top_bar.pack(fill="x", padx=20, pady=(16, 8))
 
         ctk.CTkLabel(
             top_bar,
             text="Filtros rápidos",
-            font=("Arial", 15, "bold"),
-            text_color="#7F8C8D"
+            font=("Arial", 17, "bold"),
+            text_color="#2C3E50"
         ).pack(side="left")
 
         ctk.CTkButton(
@@ -56,29 +63,29 @@ class ReportesView(ctk.CTkFrame):
             fg_color="#214328",
             hover_color="#18321E",
             text_color="#FFFFFF",
-            font=("Arial", 14, "bold"),
-            height=36,
+            font=("Arial", 16, "bold"),
+            height=42,
             corner_radius=10,
             command=self.exportar_csv
-        ).pack(side="right", padx=(14, 0))
+        ).pack(side="right", padx=(16, 0))
 
         self.lbl_precio = ctk.CTkLabel(
             top_bar,
             text="Precio por litro: $0.00",
-            font=("Arial", 15, "bold"),
+            font=("Arial", 17, "bold"),
             text_color="#214328"
         )
         self.lbl_precio.pack(side="right")
 
-        # Filtros desplegables conectados a MySQL
+        # Filtros desplegables conectados a MySQL (letra agrandada)
         filtros_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         filtros_frame.pack(fill="x", padx=20)
 
         estilo_combo = {
-            "width": 175,
-            "height": 36,
-            "font": ("Arial", 13),
-            "dropdown_font": ("Arial", 13),
+            "width": 195,
+            "height": 44,
+            "font": ("Arial", 16),
+            "dropdown_font": ("Arial", 16),
             "fg_color": "#F8F9FA",
             "text_color": "#2C3E50",
             "button_color": "#D5DBDB",
@@ -88,42 +95,34 @@ class ReportesView(ctk.CTkFrame):
         self.combo_estado = ctk.CTkOptionMenu(
             filtros_frame, values=["Estado: Todos"], command=self._al_cambiar_estado, **estilo_combo
         )
-        self.combo_estado.pack(side="left", padx=(0, 12))
+        self.combo_estado.pack(side="left", padx=(0, 10))
 
         self.combo_ciudad = ctk.CTkOptionMenu(
             filtros_frame, values=["Ciudad: Todas"], command=self._al_cambiar_ciudad, **estilo_combo
         )
-        self.combo_ciudad.pack(side="left", padx=(0, 12))
+        self.combo_ciudad.pack(side="left", padx=(0, 10))
 
         self.combo_colonia = ctk.CTkOptionMenu(
             filtros_frame, values=["Colonia: Todas"], command=self._al_cambiar_colonia, **estilo_combo
         )
-        self.combo_colonia.pack(side="left", padx=(0, 12))
+        self.combo_colonia.pack(side="left", padx=(0, 10))
 
         self.combo_calle = ctk.CTkOptionMenu(
             filtros_frame, values=["Calle: Todas"], command=lambda _: self.cargar_datos(), **estilo_combo
         )
-        self.combo_calle.pack(side="left", padx=(0, 12))
+        self.combo_calle.pack(side="left")
 
-        self.combo_metodo = ctk.CTkOptionMenu(
-            filtros_frame,
-            values=["Método: Todos", "EFECTIVO", "TARJETA"],
-            command=lambda _: self.cargar_datos(),
-            **estilo_combo
-        )
-        self.combo_metodo.pack(side="left")
-
-        # Sección media: Tarjetas de Resumen general + Filtro por fechas
+        # Sección media: Tarjetas de Resumen general + Filtro por fechas (letra agrandada)
         mid_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        mid_frame.pack(fill="x", padx=20, pady=18)
+        mid_frame.pack(fill="x", padx=20, pady=16)
 
         resumen_frame = ctk.CTkFrame(mid_frame, fg_color="transparent")
         resumen_frame.pack(side="left")
         ctk.CTkLabel(
             resumen_frame,
             text="Resumen general de la zona seleccionada",
-            font=("Arial", 14, "bold"),
-            text_color="#7F8C8D"
+            font=("Arial", 16, "bold"),
+            text_color="#2C3E50"
         ).pack(anchor="w", pady=(0, 6))
 
         cards_row = ctk.CTkFrame(resumen_frame, fg_color="transparent")
@@ -136,27 +135,31 @@ class ReportesView(ctk.CTkFrame):
         fecha_frame = ctk.CTkFrame(mid_frame, fg_color="transparent")
         fecha_frame.pack(side="right", anchor="s")
         ctk.CTkLabel(
-            fecha_frame, text="Filtro por fecha", font=("Arial", 14, "bold"), text_color="#7F8C8D"
-        ).pack(anchor="w", pady=(0, 4))
+            fecha_frame, text="Filtro por fecha", font=("Arial", 16, "bold"), text_color="#2C3E50"
+        ).pack(anchor="w", pady=(0, 6))
 
         cont_fechas = ctk.CTkFrame(fecha_frame, fg_color="transparent")
         cont_fechas.pack()
-        ctk.CTkLabel(cont_fechas, text="Desde:", font=("Arial", 13, "bold"), text_color="#7F8C8D").pack(side="left", padx=(0, 5))
-        self.entry_desde = SelectorFecha(cont_fechas, placeholder="Desde", width=155, on_change=self.cargar_datos)
+        ctk.CTkLabel(cont_fechas, text="Desde:", font=("Arial", 16, "bold"), text_color="#2C3E50").pack(side="left", padx=(0, 5))
+        self.entry_desde = SelectorFecha(cont_fechas, placeholder="Desde", width=160, on_change=self.cargar_datos)
+        self._estilizar_selector_fecha(self.entry_desde)
         self.entry_desde.pack(side="left")
 
-        ctk.CTkLabel(cont_fechas, text="Hasta:", font=("Arial", 13, "bold"), text_color="#7F8C8D").pack(side="left", padx=(10, 5))
-        self.entry_hasta = SelectorFecha(cont_fechas, placeholder="Hasta", width=155, on_change=self.cargar_datos)
+        ctk.CTkLabel(cont_fechas, text="Hasta:", font=("Arial", 16, "bold"), text_color="#2C3E50").pack(side="left", padx=(8, 5))
+        self.entry_hasta = SelectorFecha(cont_fechas, placeholder="Hasta", width=160, on_change=self.cargar_datos)
+        self._estilizar_selector_fecha(self.entry_hasta)
         self.entry_hasta.pack(side="left")
 
         ctk.CTkButton(
-            cont_fechas, text="🔄", width=40, height=34, font=("Arial", 15), fg_color="#F5CBA7", text_color="#000", command=self.limpiar_filtros
+            cont_fechas, text="🔄", width=44, height=44, font=("Arial", 18), corner_radius=8,
+            fg_color="#F5CBA7", text_color="#000", command=self.limpiar_filtros
         ).pack(side="left", padx=(8, 4))
         ctk.CTkButton(
-            cont_fechas, text="🔍", width=40, height=34, font=("Arial", 15), fg_color="#ABEBC6", text_color="#000", command=self.cargar_datos
+            cont_fechas, text="🔍", width=44, height=44, font=("Arial", 18), corner_radius=8,
+            fg_color="#ABEBC6", text_color="#000", command=self.cargar_datos
         ).pack(side="left")
 
-        # Tabla principal desglosada por zona con barras de desplazamiento
+        # Tabla principal desglosada por zona (tamaño de letra sin cambios)
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
@@ -190,6 +193,20 @@ class ReportesView(ctk.CTkFrame):
         scroll_x.pack(side="bottom", fill="x")
         self.tabla.pack(side="left", fill="both", expand=True)
 
+    def _estilizar_selector_fecha(self, selector):
+        selector.configure(height=44)
+        selector.btn_fecha.configure(font=("Arial", 15))
+        selector.btn_limpiar.configure(width=26, height=26, font=("Arial", 13, "bold"))
+        original_set_fecha = selector.set_fecha
+
+        def set_fecha_grande(nueva_fecha):
+            original_set_fecha(nueva_fecha)
+            selector.btn_fecha.configure(
+                font=("Arial", 15, "bold" if nueva_fecha else "normal")
+            )
+
+        selector.set_fecha = set_fecha_grande
+
     # ------------------------------------------------------------------
     # Tarjeta individual para los indicadores totales
     # ------------------------------------------------------------------
@@ -201,22 +218,22 @@ class ReportesView(ctk.CTkFrame):
             border_width=1,
             border_color="#F1948A",
             width=215,
-            height=82
+            height=88
         )
-        card.pack(side="left", padx=(0, 0 if ultimo else 14))
+        card.pack(side="left", padx=(0, 0 if ultimo else 12))
         card.pack_propagate(False)
 
         ctk.CTkLabel(
             card,
             text=titulo,
-            font=("Arial", 13, "bold"),
+            font=("Arial", 15, "bold"),
             text_color="#922B21"
         ).pack(anchor="w", padx=14, pady=(10, 2))
 
         lbl_valor = ctk.CTkLabel(
             card,
             text=valor_inicial,
-            font=("Arial", 22, "bold"),
+            font=("Arial", 24, "bold"),
             text_color="#C0392B"
         )
         lbl_valor.pack(anchor="w", padx=14)
@@ -324,7 +341,6 @@ class ReportesView(ctk.CTkFrame):
         self._recargar_ciudades()
         self._recargar_colonias()
         self._recargar_calles()
-        self.combo_metodo.set("Método: Todos")
         self.entry_desde.limpiar()
         self.entry_hasta.limpiar()
         self.cargar_datos()
@@ -415,11 +431,6 @@ class ReportesView(ctk.CTkFrame):
         if calle != "Calle: Todas":
             query += " AND d.calle = %s"
             params.append(calle)
-
-        metodo = self.combo_metodo.get()
-        if metodo != "Método: Todos":
-            query += " AND p.metodo_pago = %s"
-            params.append(metodo)
 
         if desde:
             query += " AND DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) >= %s"
