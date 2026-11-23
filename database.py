@@ -337,10 +337,10 @@ class SelectorFecha(ctk.CTkFrame):
 # ----------------------------------------------------------------------
 class BaseDatosLocal:
     def __init__(self):
-        self.host = "localhost"
-        self.database = "faair_alfa_gas"
-        self.user = "root"
-        self.password = ""
+        self.host = os.getenv("DB_HOST", "localhost")
+        self.database = os.getenv("DB_NAME", "faair_alfa_gas")
+        self.user = os.getenv("DB_USER", "root")
+        self.password = os.getenv("DB_PASSWORD", "")
         self.ultimo_error = None
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
