@@ -72,6 +72,17 @@ class AlertasView(ctk.CTkFrame):
             command=lambda _: self.cargar_datos()
         ).pack(side="left")
 
+        self.entry_buscar = ctk.CTkEntry(
+            barra,
+            placeholder_text="🔍 Buscar por cliente o teléfono...",
+            width=330,
+            height=44,
+            font=("Arial", 16),
+            corner_radius=22
+        )
+        self.entry_buscar.pack(side="right")
+        self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
+
         # Contenedor de tabla con barras de desplazamiento (tamaño de tabla sin cambios)
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
@@ -113,6 +124,12 @@ class AlertasView(ctk.CTkFrame):
         if self.controller.id_sucursal_actual:
             condiciones.append("c.id_sucursal = %s")
             params.append(self.controller.id_sucursal_actual)
+
+        busqueda = self.entry_buscar.get().strip()
+        if busqueda:
+            condiciones.append("(c.nombre_cliente LIKE %s OR c.telefono_whatsapp_cliente LIKE %s)")
+            like = f"%{busqueda}%"
+            params.extend([like, like])
 
         where_sql = " AND ".join(condiciones)
 

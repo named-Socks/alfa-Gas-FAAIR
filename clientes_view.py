@@ -5,37 +5,37 @@ from database import formatear_fecha, armar_direccion
 
 
 class ModalEditarCliente(ctk.CTkToplevel):
-    """Ventana emergente para editar los datos y dirección vigente de un cliente."""
+    """Ventana emergente para registrar un cliente nuevo o editar uno existente."""
 
-    def __init__(self, parent, db, datos_cliente, colonias_map, al_guardar):
+    def __init__(self, parent, db, datos_cliente, colonias_map, al_guardar, id_sucursal=None):
         super().__init__(parent)
         self.db = db
-        self.datos_cliente = datos_cliente
+        self.datos_cliente = datos_cliente or {}
+        self.es_nuevo = datos_cliente is None
         self.colonias_map = colonias_map
         self.al_guardar = al_guardar
+        self.id_sucursal = id_sucursal
 
-        self.title("Editar cliente - Alfa Gas")
+        self.title("Nuevo cliente - Alfa Gas" if self.es_nuevo else "Editar cliente - Alfa Gas")
         self.geometry("540x670")
         self.resizable(False, False)
         self.configure(fg_color="#F4F6F7")
         self.transient(parent.winfo_toplevel())
         self.bind("<Escape>", lambda _: self.destroy())
 
-       # Barra superior
-        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
+        # Barra superior
+        header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=76)
         header.pack(fill="x", side="top")
+        header.pack_propagate(False)
 
-        img_icono = Image.open("/home/jayb/Documentos/GitHub/alfa-Gas-FAAIR/alfaGasIcono.png")
-        self.icono_alfa = ctk.CTkImage(light_image=img_icono, dark_image=img_icono, size=(209, 71.33))
-
+        titulo_modal = "➕  Nuevo cliente" if self.es_nuevo else "✏️  Editar cliente"
         ctk.CTkLabel(
             header,
-            image=self.icono_alfa,
-            text="   Clientes y predicciones",
-            compound="left",
-            font=("Arial", 28, "bold"),
+            text=titulo_modal,
+            font=("Arial", 24, "bold"),
             text_color="#FFFFFF"
-        ).pack(side="left", padx=35, pady=22)
+        ).pack(side="left", padx=24)
+
         # Contenedor blanco principal
         card = ctk.CTkFrame(
             self,
@@ -61,7 +61,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             border_color="#BDC3C7"
         )
         self.entry_nombre.pack(fill="x", padx=24)
-        self.entry_nombre.insert(0, datos_cliente.get("nombre_cliente") or "")
+        self.entry_nombre.insert(0, self.datos_cliente.get("nombre_cliente") or "")
 
         # Fila: Teléfono + Estatus
         fila_tel_est = ctk.CTkFrame(card, fg_color="transparent")
@@ -84,7 +84,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             border_color="#BDC3C7"
         )
         self.entry_telefono.pack(fill="x")
-        self.entry_telefono.insert(0, datos_cliente.get("telefono_whatsapp_cliente") or "")
+        self.entry_telefono.insert(0, self.datos_cliente.get("telefono_whatsapp_cliente") or "")
 
         col_est = ctk.CTkFrame(fila_tel_est, fg_color="transparent")
         col_est.grid(row=0, column=1, padx=(8, 0), sticky="ew")
@@ -94,7 +94,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             font=("Arial", 16, "bold"),
             text_color="#2C3E50"
         ).pack(anchor="w", pady=(0, 4))
-        estatus_actual = datos_cliente.get("estado_cliente") or "ACTIVO"
+        estatus_actual = self.datos_cliente.get("estado_cliente") or "ACTIVO"
         self.var_estatus = ctk.StringVar(value=estatus_actual)
         self.menu_estatus = ctk.CTkOptionMenu(
             col_est,
@@ -130,7 +130,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
 
         nombres_colonias = list(colonias_map.keys())
         opciones_colonia = ["Sin colonia"] + nombres_colonias if nombres_colonias else ["Sin colonia"]
-        colonia_actual = datos_cliente.get("nombre_colonia")
+        colonia_actual = self.datos_cliente.get("nombre_colonia")
         valor_inicial_col = colonia_actual if colonia_actual in colonias_map else "Sin colonia"
 
         self.var_colonia = ctk.StringVar(value=valor_inicial_col)
@@ -169,7 +169,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             border_color="#BDC3C7"
         )
         self.entry_calle.pack(fill="x")
-        self.entry_calle.insert(0, datos_cliente.get("calle") or "")
+        self.entry_calle.insert(0, self.datos_cliente.get("calle") or "")
 
         col_num = ctk.CTkFrame(fila_dir, fg_color="transparent")
         col_num.grid(row=0, column=1, padx=(8, 0), sticky="ew")
@@ -187,7 +187,7 @@ class ModalEditarCliente(ctk.CTkToplevel):
             border_color="#BDC3C7"
         )
         self.entry_num.pack(fill="x")
-        self.entry_num.insert(0, str(datos_cliente.get("num_exterior") or ""))
+        self.entry_num.insert(0, str(self.datos_cliente.get("num_exterior") or ""))
         self.entry_num.bind("<Return>", lambda _: self.guardar())
 
         # Mensaje de validación
@@ -220,9 +220,10 @@ class ModalEditarCliente(ctk.CTkToplevel):
             command=self.destroy
         ).grid(row=0, column=0, padx=(0, 6), sticky="ew")
 
+        texto_btn_guardar = "Registrar cliente" if self.es_nuevo else "Guardar cambios"
         ctk.CTkButton(
             fila_botones,
-            text="Guardar cambios",
+            text=texto_btn_guardar,
             height=44,
             fg_color="#214328",
             text_color="#FFFFFF",
@@ -278,33 +279,26 @@ class ModalEditarCliente(ctk.CTkToplevel):
 
         cursor = conexion.cursor()
         try:
-            id_cliente = self.datos_cliente["id_cliente"]
-            cursor.execute(
-                """
-                UPDATE cliente
-                SET nombre_cliente = %s,
-                    telefono_whatsapp_cliente = %s,
-                    estado_cliente = %s
-                WHERE id_cliente = %s
-                """,
-                (nombre, telefono, estatus, id_cliente)
-            )
+            if self.es_nuevo:
+                id_suc = self.id_sucursal
+                if not id_suc:
+                    cursor.execute("SELECT id_sucursal FROM sucursal ORDER BY id_sucursal ASC LIMIT 1")
+                    fila_suc = cursor.fetchone()
+                    id_suc = fila_suc[0] if fila_suc else 1
 
-            if tiene_datos_dir:
-                id_colonia = self.colonias_map[colonia_sel]
-                id_direccion = self.datos_cliente.get("id_direccion")
-                if id_direccion:
-                    cursor.execute(
-                        """
-                        UPDATE direccion
-                        SET calle = %s,
-                            num_exterior = %s,
-                            id_colonia = %s
-                        WHERE id_direccion = %s
-                        """,
-                        (calle, num_ext, id_colonia, id_direccion)
+                cursor.execute(
+                    """
+                    INSERT INTO cliente (
+                        id_sucursal, nombre_cliente, telefono_whatsapp_cliente, estado_cliente
                     )
-                else:
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (id_suc, nombre, telefono, estatus)
+                )
+                id_cliente = cursor.lastrowid
+
+                if tiene_datos_dir:
+                    id_colonia = self.colonias_map[colonia_sel]
                     cursor.execute(
                         """
                         INSERT INTO direccion (
@@ -315,16 +309,64 @@ class ModalEditarCliente(ctk.CTkToplevel):
                         (id_cliente, id_colonia, calle, num_ext)
                     )
 
-            conexion.commit()
-            self.destroy()
-            self.al_guardar()
-            messagebox.showinfo(
-                "Cliente actualizado",
-                f"Los datos de {nombre} se guardaron correctamente."
-            )
+                conexion.commit()
+                self.destroy()
+                self.al_guardar()
+                messagebox.showinfo(
+                    "Cliente registrado",
+                    f"El cliente {nombre} se registró correctamente."
+                )
+            else:
+                id_cliente = self.datos_cliente["id_cliente"]
+                cursor.execute(
+                    """
+                    UPDATE cliente
+                    SET nombre_cliente = %s,
+                        telefono_whatsapp_cliente = %s,
+                        estado_cliente = %s
+                    WHERE id_cliente = %s
+                    """,
+                    (nombre, telefono, estatus, id_cliente)
+                )
+
+                if tiene_datos_dir:
+                    id_colonia = self.colonias_map[colonia_sel]
+                    id_direccion = self.datos_cliente.get("id_direccion")
+                    if id_direccion:
+                        cursor.execute(
+                            """
+                            UPDATE direccion
+                            SET calle = %s,
+                                num_exterior = %s,
+                                id_colonia = %s
+                            WHERE id_direccion = %s
+                            """,
+                            (calle, num_ext, id_colonia, id_direccion)
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            INSERT INTO direccion (
+                                id_cliente, id_colonia, calle, num_exterior, direccion_recurrente_cliente
+                            )
+                            VALUES (%s, %s, %s, %s, 1)
+                            """,
+                            (id_cliente, id_colonia, calle, num_ext)
+                        )
+
+                conexion.commit()
+                self.destroy()
+                self.al_guardar()
+                messagebox.showinfo(
+                    "Cliente actualizado",
+                    f"Los datos de {nombre} se guardaron correctamente."
+                )
         except Exception as e:
             conexion.rollback()
-            self.lbl_error.configure(text=f"Error al actualizar en MySQL: {e}")
+            if "Duplicate entry" in str(e):
+                self.lbl_error.configure(text="Ya existe un cliente registrado con ese teléfono.")
+            else:
+                self.lbl_error.configure(text=f"Error al guardar en MySQL: {e}")
         finally:
             cursor.close()
             conexion.close()
@@ -338,7 +380,7 @@ class ClientesView(ctk.CTkFrame):
         self._colonias_map = {}
         self._modal_editar = None
 
-       # Barra superior
+        # Barra superior
         header = ctk.CTkFrame(self, fg_color="#214328", corner_radius=0, height=88)
         header.pack(fill="x", side="top")
 
@@ -373,7 +415,7 @@ class ClientesView(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior de filtros y búsqueda (letra agrandada)
+        # Barra superior de filtros, búsqueda y nuevo cliente
         top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
         top_bar.pack(fill="x", padx=20, pady=(20, 10))
 
@@ -389,6 +431,22 @@ class ClientesView(ctk.CTkFrame):
             top_bar,
             variable=self.var_estado_cli,
             values=["Todos", "ACTIVO", "PENDIENTE_REGISTRO", "INACTIVO", "BAJA"],
+            width=215,
+            height=44,
+            font=("Arial", 16),
+            dropdown_font=("Arial", 16),
+            fg_color="#F8F9FA",
+            text_color="#2C3E50",
+            button_color="#D5DBDB",
+            command=lambda _: self.cargar_datos()
+        )
+        self.menu_estado.pack(side="left", padx=(0, 12))
+
+        self.var_colonia = ctk.StringVar(value="Todas las colonias")
+        self.menu_colonia = ctk.CTkOptionMenu(
+            top_bar,
+            variable=self.var_colonia,
+            values=["Todas las colonias"],
             width=230,
             height=44,
             font=("Arial", 16),
@@ -398,28 +456,24 @@ class ClientesView(ctk.CTkFrame):
             button_color="#D5DBDB",
             command=lambda _: self.cargar_datos()
         )
-        self.menu_estado.pack(side="left", padx=(0, 14))
+        self.menu_colonia.pack(side="left", padx=(0, 12))
 
-        self.var_colonia = ctk.StringVar(value="Todas las colonias")
-        self.menu_colonia = ctk.CTkOptionMenu(
+        ctk.CTkButton(
             top_bar,
-            variable=self.var_colonia,
-            values=["Todas las colonias"],
-            width=245,
+            text="➕ Nuevo cliente",
+            fg_color="#214328",
+            hover_color="#18321E",
+            text_color="#FFFFFF",
+            font=("Arial", 16, "bold"),
             height=44,
-            font=("Arial", 16),
-            dropdown_font=("Arial", 16),
-            fg_color="#F8F9FA",
-            text_color="#2C3E50",
-            button_color="#D5DBDB",
-            command=lambda _: self.cargar_datos()
-        )
-        self.menu_colonia.pack(side="left", padx=(0, 14))
+            corner_radius=10,
+            command=self._abrir_modal_nuevo
+        ).pack(side="right", padx=(12, 0))
 
         self.entry_buscar = ctk.CTkEntry(
             top_bar,
             placeholder_text="🔍 Buscar por nombre o teléfono...",
-            width=330,
+            width=280,
             height=44,
             font=("Arial", 16),
             corner_radius=22
@@ -427,7 +481,7 @@ class ClientesView(ctk.CTkFrame):
         self.entry_buscar.pack(side="right")
         self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
-        # Contenedor de tabla con barras de desplazamiento (tamaño de tabla sin cambios)
+        # Contenedor de tabla con barras de desplazamiento
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
 
@@ -491,6 +545,20 @@ class ClientesView(ctk.CTkFrame):
         if seleccion:
             self._abrir_modal_por_id(seleccion[0])
 
+    def _abrir_modal_nuevo(self):
+        if self._modal_editar is not None and self._modal_editar.winfo_exists():
+            self._modal_editar.focus()
+            return
+
+        self._modal_editar = ModalEditarCliente(
+            self,
+            db=self.controller.db,
+            datos_cliente=None,
+            colonias_map=self._colonias_map,
+            al_guardar=self.cargar_datos,
+            id_sucursal=self.controller.id_sucursal_actual
+        )
+
     def _abrir_modal_por_id(self, id_cliente_str):
         if self._modal_editar is not None and self._modal_editar.winfo_exists():
             self._modal_editar.focus()
@@ -505,7 +573,8 @@ class ClientesView(ctk.CTkFrame):
             db=self.controller.db,
             datos_cliente=datos_cliente,
             colonias_map=self._colonias_map,
-            al_guardar=self.cargar_datos
+            al_guardar=self.cargar_datos,
+            id_sucursal=self.controller.id_sucursal_actual
         )
 
     def _cargar_colonias(self):
