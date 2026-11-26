@@ -415,9 +415,9 @@ class ClientesView(ctk.CTkFrame):
         main_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=15)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Barra superior de filtros, búsqueda y nuevo cliente
+        # Fila 1: Estatus, historial, búsqueda y nuevo cliente
         top_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
-        top_bar.pack(fill="x", padx=20, pady=(20, 10))
+        top_bar.pack(fill="x", padx=20, pady=(20, 8))
 
         ctk.CTkLabel(
             top_bar,
@@ -426,37 +426,36 @@ class ClientesView(ctk.CTkFrame):
             text_color="#2C3E50"
         ).pack(side="left", padx=(0, 12))
 
+        estilo_combo = {
+            "height": 44,
+            "font": ("Arial", 16),
+            "dropdown_font": ("Arial", 16),
+            "fg_color": "#F8F9FA",
+            "text_color": "#2C3E50",
+            "button_color": "#D5DBDB",
+        }
+
         self.var_estado_cli = ctk.StringVar(value="Todos")
         self.menu_estado = ctk.CTkOptionMenu(
             top_bar,
             variable=self.var_estado_cli,
             values=["Todos", "ACTIVO", "PENDIENTE_REGISTRO", "INACTIVO", "BAJA"],
             width=215,
-            height=44,
-            font=("Arial", 16),
-            dropdown_font=("Arial", 16),
-            fg_color="#F8F9FA",
-            text_color="#2C3E50",
-            button_color="#D5DBDB",
-            command=lambda _: self.cargar_datos()
+            command=lambda _: self.cargar_datos(),
+            **estilo_combo
         )
-        self.menu_estado.pack(side="left", padx=(0, 12))
+        self.menu_estado.pack(side="left", padx=(0, 10))
 
-        self.var_colonia = ctk.StringVar(value="Todas las colonias")
-        self.menu_colonia = ctk.CTkOptionMenu(
+        self.var_historial = ctk.StringVar(value="Historial: Todos")
+        self.menu_historial = ctk.CTkOptionMenu(
             top_bar,
-            variable=self.var_colonia,
-            values=["Todas las colonias"],
-            width=230,
-            height=44,
-            font=("Arial", 16),
-            dropdown_font=("Arial", 16),
-            fg_color="#F8F9FA",
-            text_color="#2C3E50",
-            button_color="#D5DBDB",
-            command=lambda _: self.cargar_datos()
+            variable=self.var_historial,
+            values=["Historial: Todos", "Con predicción", "Sin historial"],
+            width=205,
+            command=lambda _: self.cargar_datos(),
+            **estilo_combo
         )
-        self.menu_colonia.pack(side="left", padx=(0, 12))
+        self.menu_historial.pack(side="left", padx=(0, 10))
 
         ctk.CTkButton(
             top_bar,
@@ -481,6 +480,54 @@ class ClientesView(ctk.CTkFrame):
         self.entry_buscar.pack(side="right")
         self.entry_buscar.bind("<KeyRelease>", lambda _: self.cargar_datos())
 
+        # Fila 2: Filtros geográficos (Estado, Ciudad, Colonia, Calle)
+        filtros_geo = ctk.CTkFrame(main_frame, fg_color="transparent")
+        filtros_geo.pack(fill="x", padx=20, pady=(0, 8))
+
+        self.var_entidad = ctk.StringVar(value="Estado: Todos")
+        self.menu_entidad = ctk.CTkOptionMenu(
+            filtros_geo,
+            variable=self.var_entidad,
+            values=["Estado: Todos"],
+            width=205,
+            command=self._al_cambiar_entidad,
+            **estilo_combo
+        )
+        self.menu_entidad.pack(side="left", padx=(0, 10))
+
+        self.var_municipio = ctk.StringVar(value="Ciudad: Todos")
+        self.menu_municipio = ctk.CTkOptionMenu(
+            filtros_geo,
+            variable=self.var_municipio,
+            values=["Municipio: Todos"],
+            width=215,
+            command=self._al_cambiar_municipio,
+            **estilo_combo
+        )
+        self.menu_municipio.pack(side="left", padx=(0, 10))
+
+        self.var_colonia = ctk.StringVar(value="Todas las colonias")
+        self.menu_colonia = ctk.CTkOptionMenu(
+            filtros_geo,
+            variable=self.var_colonia,
+            values=["Todas las colonias"],
+            width=230,
+            command=self._al_cambiar_colonia,
+            **estilo_combo
+        )
+        self.menu_colonia.pack(side="left", padx=(0, 10))
+
+        self.var_calle = ctk.StringVar(value="Calle: Todas")
+        self.menu_calle = ctk.CTkOptionMenu(
+            filtros_geo,
+            variable=self.var_calle,
+            values=["Calle: Todas"],
+            width=220,
+            command=lambda _: self.cargar_datos(),
+            **estilo_combo
+        )
+        self.menu_calle.pack(side="left")
+
         # Contenedor de tabla con barras de desplazamiento
         tabla_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         tabla_frame.pack(fill="both", expand=True, padx=20, pady=15)
@@ -503,7 +550,7 @@ class ClientesView(ctk.CTkFrame):
             "ID", "Nombre del cliente", "Teléfono", "Dirección vigente",
             "Frecuencia", "Último pedido", "Próximo estimado", "Estatus", "Editar"
         ]
-        anchos = [65, 210, 140, 280, 130, 145, 175, 155, 115]
+        anchos = [65, 210, 140, 280, 130, 145, 175, 205, 115]
         for col, texto, ancho in zip(columnas, encabezados, anchos):
             self.tabla.heading(col, text=texto)
             self.tabla.column(col, anchor="center", width=ancho, minwidth=ancho)
@@ -582,8 +629,141 @@ class ClientesView(ctk.CTkFrame):
             "SELECT MIN(id_colonia) AS id_colonia, nombre_colonia FROM colonia GROUP BY nombre_colonia ORDER BY nombre_colonia"
         )
         self._colonias_map = {f["nombre_colonia"]: f["id_colonia"] for f in filas}
-        opciones = ["Todas las colonias"] + list(self._colonias_map.keys())
-        self.menu_colonia.configure(values=opciones)
+
+    def _cargar_opciones_filtros(self):
+        self._cargar_colonias()
+        estados = self.controller.db.consultar(
+            "SELECT nombre_entidad_fede FROM entidad_federativa ORDER BY nombre_entidad_fede"
+        )
+        lista_estados = ["Estado: Todos"] + [r["nombre_entidad_fede"] for r in estados]
+        self.menu_entidad.configure(values=lista_estados)
+        if self.var_entidad.get() not in lista_estados:
+            self.var_entidad.set("Estado: Todos")
+
+        self._recargar_municipios()
+        self._recargar_colonias()
+        self._recargar_calles()
+
+    def _recargar_municipios(self):
+        entidad = self.var_entidad.get()
+        if entidad != "Estado: Todos":
+            filas = self.controller.db.consultar(
+                """
+                SELECT m.nombre_municipio
+                FROM municipio m
+                JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
+                WHERE ef.nombre_entidad_fede = %s
+                ORDER BY m.nombre_municipio
+                """,
+                (entidad,)
+            )
+        else:
+            filas = self.controller.db.consultar(
+                "SELECT nombre_municipio FROM municipio ORDER BY nombre_municipio"
+            )
+        lista = ["Municipio: Todos"] + [r["nombre_municipio"] for r in filas]
+        self.menu_municipio.configure(values=lista)
+        if self.var_municipio.get() not in lista:
+            self.var_municipio.set("Municipio: Todos")
+
+    def _recargar_colonias(self):
+        municipio = self.var_municipio.get()
+        entidad = self.var_entidad.get()
+        if municipio != "Municipio: Todos":
+            filas = self.controller.db.consultar(
+                """
+                SELECT DISTINCT col.nombre_colonia
+                FROM colonia col
+                JOIN municipio m ON col.id_municipio = m.id_municipio
+                WHERE m.nombre_municipio = %s
+                ORDER BY col.nombre_colonia
+                """,
+                (municipio,)
+            )
+        elif entidad != "Estado: Todos":
+            filas = self.controller.db.consultar(
+                """
+                SELECT DISTINCT col.nombre_colonia
+                FROM colonia col
+                JOIN municipio m ON col.id_municipio = m.id_municipio
+                JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
+                WHERE ef.nombre_entidad_fede = %s
+                ORDER BY col.nombre_colonia
+                """,
+                (entidad,)
+            )
+        else:
+            filas = self.controller.db.consultar(
+                "SELECT DISTINCT nombre_colonia FROM colonia ORDER BY nombre_colonia"
+            )
+        lista = ["Todas las colonias"] + [r["nombre_colonia"] for r in filas]
+        self.menu_colonia.configure(values=lista)
+        if self.var_colonia.get() not in lista:
+            self.var_colonia.set("Todas las colonias")
+
+    def _recargar_calles(self):
+        colonia = self.var_colonia.get()
+        municipio = self.var_municipio.get()
+        entidad = self.var_entidad.get()
+        if colonia != "Todas las colonias":
+            filas = self.controller.db.consultar(
+                """
+                SELECT DISTINCT d.calle
+                FROM direccion d
+                JOIN colonia col ON d.id_colonia = col.id_colonia
+                WHERE col.nombre_colonia = %s AND d.direccion_recurrente_cliente = 1
+                ORDER BY d.calle
+                """,
+                (colonia,)
+            )
+        elif municipio != "Municipio: Todos":
+            filas = self.controller.db.consultar(
+                """
+                SELECT DISTINCT d.calle
+                FROM direccion d
+                JOIN colonia col ON d.id_colonia = col.id_colonia
+                JOIN municipio m ON col.id_municipio = m.id_municipio
+                WHERE m.nombre_municipio = %s AND d.direccion_recurrente_cliente = 1
+                ORDER BY d.calle
+                """,
+                (municipio,)
+            )
+        elif entidad != "Estado: Todos":
+            filas = self.controller.db.consultar(
+                """
+                SELECT DISTINCT d.calle
+                FROM direccion d
+                JOIN colonia col ON d.id_colonia = col.id_colonia
+                JOIN municipio m ON col.id_municipio = m.id_municipio
+                JOIN entidad_federativa ef ON m.id_entidad_fede = ef.id_entidad_fede
+                WHERE ef.nombre_entidad_fede = %s AND d.direccion_recurrente_cliente = 1
+                ORDER BY d.calle
+                """,
+                (entidad,)
+            )
+        else:
+            filas = self.controller.db.consultar(
+                "SELECT DISTINCT calle FROM direccion WHERE direccion_recurrente_cliente = 1 ORDER BY calle"
+            )
+        lista = ["Calle: Todas"] + [r["calle"] for r in filas]
+        self.menu_calle.configure(values=lista)
+        if self.var_calle.get() not in lista:
+            self.var_calle.set("Calle: Todas")
+
+    def _al_cambiar_entidad(self, _):
+        self._recargar_municipios()
+        self._recargar_colonias()
+        self._recargar_calles()
+        self.cargar_datos()
+
+    def _al_cambiar_municipio(self, _):
+        self._recargar_colonias()
+        self._recargar_calles()
+        self.cargar_datos()
+
+    def _al_cambiar_colonia(self, _):
+        self._recargar_calles()
+        self.cargar_datos()
 
     def cargar_datos(self):
         for item in self.tabla.get_children():
@@ -602,10 +782,31 @@ class ClientesView(ctk.CTkFrame):
             condiciones.append("c.estado_cliente = %s")
             params.append(estado_sel)
 
+        historial_sel = self.var_historial.get()
+        if historial_sel == "Con predicción":
+            condiciones.append("p.promedio_dias_consumo IS NOT NULL")
+        elif historial_sel == "Sin historial":
+            condiciones.append("p.promedio_dias_consumo IS NULL")
+
+        entidad_sel = self.var_entidad.get()
+        if entidad_sel != "Estado: Todos":
+            condiciones.append("ef.nombre_entidad_fede = %s")
+            params.append(entidad_sel)
+
+        municipio_sel = self.var_municipio.get()
+        if municipio_sel != "Municipio: Todos":
+            condiciones.append("m.nombre_municipio = %s")
+            params.append(municipio_sel)
+
         colonia_sel = self.var_colonia.get()
         if colonia_sel != "Todas las colonias":
             condiciones.append("col.nombre_colonia = %s")
             params.append(colonia_sel)
+
+        calle_sel = self.var_calle.get()
+        if calle_sel != "Calle: Todas":
+            condiciones.append("d.calle = %s")
+            params.append(calle_sel)
 
         busqueda = self.entry_buscar.get().strip()
         if busqueda:
@@ -633,6 +834,10 @@ class ClientesView(ctk.CTkFrame):
                 ON d.id_cliente = c.id_cliente AND d.direccion_recurrente_cliente = 1
             LEFT JOIN colonia col
                 ON col.id_colonia = d.id_colonia
+            LEFT JOIN municipio m
+                ON m.id_municipio = col.id_municipio
+            LEFT JOIN entidad_federativa ef
+                ON ef.id_entidad_fede = m.id_entidad_fede
             LEFT JOIN prediccion p
                 ON p.id_cliente = c.id_cliente AND p.vigente = 1
             WHERE {where_sql}
@@ -666,5 +871,5 @@ class ClientesView(ctk.CTkFrame):
         super().tkraise(*args, **kwargs)
         if self.controller.admin_actual:
             self.lbl_admin.configure(text=f"👤 {self.controller.admin_actual}")
-        self._cargar_colonias()
+        self._cargar_opciones_filtros()
         self.cargar_datos()

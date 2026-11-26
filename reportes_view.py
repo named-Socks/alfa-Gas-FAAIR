@@ -166,7 +166,7 @@ class ReportesView(ctk.CTkFrame):
         scroll_y = ttk.Scrollbar(tabla_frame, orient="vertical")
         scroll_x = ttk.Scrollbar(tabla_frame, orient="horizontal")
 
-        columnas = ("ubicacion", "colonia", "fecha", "pedidos", "litros", "total")
+        columnas = ("ubicacion", "colonia", "calle", "fecha", "pedidos", "litros", "total")
         self.tabla = ttk.Treeview(
             tabla_frame,
             columns=columnas,
@@ -178,12 +178,13 @@ class ReportesView(ctk.CTkFrame):
         scroll_x.config(command=self.tabla.xview)
 
         encabezados = [
-            ("ubicacion", "Ubicación", 180),
-            ("colonia", "Colonia", 220),
-            ("fecha", "Última venta", 170),
-            ("pedidos", "Pedidos", 120),
-            ("litros", "Litros", 145),
-            ("total", "Total Ingresos", 175),
+            ("ubicacion", "Ubicación", 160),
+            ("colonia", "Colonia", 200),
+            ("calle", "Calle", 210),
+            ("fecha", "Última venta", 150),
+            ("pedidos", "Pedidos", 110),
+            ("litros", "Litros", 135),
+            ("total", "Total Ingresos", 165),
         ]
         for col, texto, ancho in encabezados:
             self.tabla.heading(col, text=texto)
@@ -364,7 +365,7 @@ class ReportesView(ctk.CTkFrame):
         try:
             with open(ruta, "w", newline="", encoding="utf-8-sig") as archivo:
                 writer = csv.writer(archivo)
-                writer.writerow(["Ubicación", "Colonia", "Última venta", "Pedidos", "Litros", "Total Ingresos"])
+                writer.writerow(["Ubicación", "Colonia", "Calle", "Última venta", "Pedidos", "Litros", "Total Ingresos"])
                 for fila in filas:
                     writer.writerow(fila)
             messagebox.showinfo("Exportación exitosa", f"El reporte se guardó en:\n{ruta}")
@@ -395,6 +396,7 @@ class ReportesView(ctk.CTkFrame):
             SELECT
                 m.nombre_municipio AS municipio,
                 col.nombre_colonia AS colonia,
+                d.calle AS calle,
                 COUNT(DISTINCT p.id_pedido) AS pedidos,
                 COALESCE(SUM(CASE WHEN prod.tipo_producto = 'GAS_ESTACIONARIO' THEN dp.cantidad_litros ELSE 0 END), 0) AS litros,
                 COALESCE(SUM(COALESCE(dp.subtotal, dp.cantidad_litros * COALESCE(dp.precio_unitario, pp.precio_producto))), 0) AS total,
@@ -439,7 +441,7 @@ class ReportesView(ctk.CTkFrame):
             query += " AND DATE(COALESCE(p.fecha_entrega_real, p.fecha_registro)) <= %s"
             params.append(hasta)
 
-        query += " GROUP BY m.nombre_municipio, col.nombre_colonia ORDER BY total DESC"
+        query += " GROUP BY m.nombre_municipio, col.nombre_colonia, d.calle ORDER BY total DESC"
 
         total_ingresos = 0.0
         total_litros = 0.0
@@ -453,6 +455,7 @@ class ReportesView(ctk.CTkFrame):
             self.tabla.insert("", "end", values=(
                 fila["municipio"],
                 fila["colonia"],
+                fila["calle"] or "—",
                 formatear_fecha(fila["ultima_venta"]),
                 pedidos_fila,
                 f"{litros_fila:.2f} L",
